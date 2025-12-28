@@ -1,0 +1,38 @@
+my-react-app/
+├── public/                  # Static assets (e.g., index.html, favicon)
+├── src/
+│   ├── api/                 # API-related code (generated client, services)
+│   │   ├── client/          # Generated OpenAPI client (e.g., via openapi-typescript-codegen)
+│   │   ├── services/        # Wrapper services for API calls (e.g., fetchUser.ts)
+│   │   └── types/           # Generated types from OpenAPI
+│   ├── components/          # Reusable UI components
+│   │   ├── Button/          # Example component folder
+│   │   │   ├── Button.tsx
+│   │   │   ├── Button.test.tsx  # Unit test
+│   │   │   └── Button.stories.tsx  # Storybook mockup
+│   │   └── ...              # Other components
+│   ├── pages/               # Page-level components (e.g., for routing)
+│   │   ├── Home/            # Example page folder
+│   │   │   ├── Home.tsx
+│   │   │   ├── Home.test.tsx
+│   │   │   └── Home.stories.tsx
+│   │   └── ...              # Other pages
+│   ├── utils/               # Helper functions (e.g., date formatting)
+│   ├── mocks/               # Mock data and handlers for testing/mock server
+│   │   ├── handlers.ts      # MSW handlers generated/configured from OpenAPI
+│   │   ├── data/            # Static mock data files (e.g., users.json)
+│   │   └── server.ts        # Mock server setup (e.g., for MSW)
+│   ├── App.tsx              # Main app entry
+│   ├── index.tsx            # Root render
+│   ├── routes.tsx           # If using React Router
+│   └── styles/              # Global CSS/SCSS (or use CSS-in-JS like styled-components)
+├── tests/                   # Integration/e2e tests (if separate from unit tests)
+│   └── setup.ts             # Test setup (e.g., for MSW in tests)
+├── stories/                 # Storybook config (auto-generated, but can add custom)
+├── openapi.yaml             # Your OpenAPI spec file (or .json)
+├── .storybook/              # Storybook configuration
+├── vite.config.ts           # Vite build config
+├── tsconfig.json            # TypeScript config (assuming TS for better typing with OpenAPI)
+├── package.json             # Dependencies
+├── README.md                # Project docs, including workflow
+└── .env                     # Environment variables (e.g., API base URL)

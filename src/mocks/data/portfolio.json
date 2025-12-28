@@ -1,0 +1,58 @@
+[
+  {
+    "ticker": "AAPL",
+    "asset_type": "Stock",
+    "quantity": 100.0,
+    "average_price": 150.50,
+    "cost_basis": 15050.0,
+    "cost_basis_method": "fifo",
+    "current_price": 175.25,
+    "market_value": 17525.0,
+    "unrealized_gain_loss": 2475.0
+  },
+  {
+    "ticker": "GOOGL",
+    "asset_type": "Stock",
+    "quantity": 50.0,
+    "average_price": 2500.0,
+    "cost_basis": 125000.0,
+    "cost_basis_method": "average",
+    "current_price": 2800.0,
+    "market_value": 140000.0,
+    "unrealized_gain_loss": 15000.0
+  },
+  {
+    "ticker": "MSFT",
+    "asset_type": "Stock",
+    "quantity": 75.0,
+    "average_price": 300.0,
+    "cost_basis": 22500.0,
+    "cost_basis_method": "fifo",
+    "current_price": 380.50,
+    "market_value": 28537.5,
+    "unrealized_gain_loss": 6037.5
+  },
+  {
+    "ticker": "BTC",
+    "asset_type": "Crypto",
+    "quantity": 0.5,
+    "average_price": 45000.0,
+    "cost_basis": 22500.0,
+    "cost_basis_method": "average",
+    "current_price": 50000.0,
+    "market_value": 25000.0,
+    "unrealized_gain_loss": 2500.0
+  },
+  {
+    "ticker": "TSLA",
+    "asset_type": "Stock",
+    "quantity": 25.0,
+    "average_price": 800.0,
+    "cost_basis": 20000.0,
+    "cost_basis_method": "fifo",
+    "current_price": 900.0,
+    "market_value": 22500.0,
+    "unrealized_gain_loss": 2500.0
+  }
+]
+
