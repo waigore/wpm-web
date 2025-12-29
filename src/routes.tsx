@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { Login } from './pages/Login/Login';
 import { PortfolioOverview } from './pages/PortfolioOverview/PortfolioOverview';
+import { ProtectedLayout } from './components/ProtectedLayout/ProtectedLayout';
 import { useAuth } from './hooks/useAuth';
 import React from 'react';
 
@@ -29,7 +30,9 @@ export const routes = [
     path: '/portfolio',
     element: (
       <ProtectedRoute>
-        <PortfolioOverview />
+        <ProtectedLayout>
+          <PortfolioOverview />
+        </ProtectedLayout>
       </ProtectedRoute>
     ),
   },
