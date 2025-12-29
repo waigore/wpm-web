@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllPositions, PortfolioParams } from '../api/services/portfolioService';
-import type { Page_Position_, Position } from '../api/client';
+import type { Position } from '../api/client';
 import { useAuth } from './useAuth';
 
 export interface UsePortfolioReturn {
@@ -11,6 +11,9 @@ export interface UsePortfolioReturn {
   pageSize: number;
   loading: boolean;
   error: string | null;
+  totalMarketValue: number | null;
+  totalUnrealizedGainLoss: number | null;
+  totalCostBasis: number;
   refetch: () => Promise<void>;
 }
 
@@ -23,6 +26,9 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
   const [pageSize, setPageSize] = useState(params?.size ?? 50);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalMarketValue, setTotalMarketValue] = useState<number | null>(null);
+  const [totalUnrealizedGainLoss, setTotalUnrealizedGainLoss] = useState<number | null>(null);
+  const [totalCostBasis, setTotalCostBasis] = useState(0);
 
   const fetchPositions = async () => {
     if (!isAuthenticated) {
@@ -33,17 +39,20 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
     setError(null);
 
     try {
-      const response: Page_Position_ = await getAllPositions({
+      const response = await getAllPositions({
         ...params,
         page: currentPage,
         size: pageSize,
       });
 
-      setPositions(response.items || []);
-      setTotalItems(response.total || 0);
-      setTotalPages(response.pages || 0);
-      setCurrentPage(response.page || 1);
-      setPageSize(response.size || pageSize);
+      setPositions(response.positions.items || []);
+      setTotalItems(response.positions.total || 0);
+      setTotalPages(response.positions.pages || 0);
+      setCurrentPage(response.positions.page || 1);
+      setPageSize(response.positions.size || pageSize);
+      setTotalMarketValue(response.total_market_value ?? null);
+      setTotalUnrealizedGainLoss(response.total_unrealized_gain_loss ?? null);
+      setTotalCostBasis(response.total_cost_basis || 0);
     } catch (err: any) {
       let errorMessage = 'Failed to fetch portfolio positions';
       
@@ -63,6 +72,9 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
       
       setError(errorMessage);
       setPositions([]);
+      setTotalMarketValue(null);
+      setTotalUnrealizedGainLoss(null);
+      setTotalCostBasis(0);
     } finally {
       setLoading(false);
     }
@@ -85,6 +97,9 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
     pageSize,
     loading,
     error,
+    totalMarketValue,
+    totalUnrealizedGainLoss,
+    totalCostBasis,
     refetch,
   };
 }

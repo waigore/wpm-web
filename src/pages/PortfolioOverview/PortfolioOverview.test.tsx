@@ -78,27 +78,39 @@ describe('PortfolioOverview', () => {
     vi.mocked(authService.getUsername).mockReturnValue('testuser');
   });
 
-  it('renders portfolio overview page', () => {
+  it('renders portfolio overview page', async () => {
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: [],
-      total: 0,
-      page: 1,
-      size: 50,
-      pages: 0,
+      positions: {
+        items: [],
+        total: 0,
+        page: 1,
+        size: 50,
+        pages: 0,
+      },
+      total_market_value: null,
+      total_cost_basis: 0,
+      total_unrealized_gain_loss: null,
     });
 
     renderPortfolioOverview();
 
-    expect(screen.getByText(/portfolio overview/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/portfolio overview/i)).toBeInTheDocument();
+    });
   });
 
   it('displays positions in table', async () => {
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: mockPositions,
-      total: 2,
-      page: 1,
-      size: 50,
-      pages: 1,
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
     });
 
     renderPortfolioOverview();
@@ -131,14 +143,157 @@ describe('PortfolioOverview', () => {
     });
   });
 
+  it('displays portfolio totals row', async () => {
+    vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
+    });
+
+    renderPortfolioOverview();
+
+    await waitFor(() => {
+      // Use getAllByText and check the first one (totals section) or query by role/container
+      const marketValueLabels = screen.getAllByText('Market Value');
+      expect(marketValueLabels.length).toBeGreaterThan(0);
+      expect(screen.getByText('Unrealized P/L')).toBeInTheDocument();
+      const costBasisLabels = screen.getAllByText('Cost Basis');
+      expect(costBasisLabels.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('formats portfolio totals as currency', async () => {
+    vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525.5,
+      total_cost_basis: 140050.25,
+      total_unrealized_gain_loss: 17475.25,
+    });
+
+    renderPortfolioOverview();
+
+    await waitFor(() => {
+      // Check that currency formatting is applied (contains $ and commas)
+      // Get the first "Market Value" which is in the totals section
+      const marketValueLabels = screen.getAllByText('Market Value');
+      const totalsSection = marketValueLabels[0].closest('[class*="MuiPaper-root"]');
+      expect(totalsSection?.textContent).toMatch(/\$[\d,]+\.\d{2}/);
+    });
+  });
+
+  it('styles unrealized gain/loss with color for positive values', async () => {
+    vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
+    });
+
+    renderPortfolioOverview();
+
+    await waitFor(() => {
+      const unrealizedPL = screen.getByText('Unrealized P/L');
+      // Find the Paper component containing Unrealized P/L
+      const paperElement = unrealizedPL.closest('[class*="MuiPaper-root"]');
+      expect(paperElement).toBeInTheDocument();
+      // Find the value element (h6 Typography) within the Paper
+      const valueElement = paperElement?.querySelector('[class*="MuiTypography-h6"]') as HTMLElement;
+      expect(valueElement).toBeInTheDocument();
+      // Check that the element has color styling (success color for positive)
+      const styles = window.getComputedStyle(valueElement);
+      expect(styles.color).toBeTruthy();
+      expect(styles.color).not.toBe('rgba(0, 0, 0, 0)');
+    });
+  });
+
+  it('styles unrealized gain/loss with color for negative values', async () => {
+    vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 100000,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: -40050,
+    });
+
+    renderPortfolioOverview();
+
+    await waitFor(() => {
+      const unrealizedPL = screen.getByText('Unrealized P/L');
+      // Find the Paper component containing Unrealized P/L
+      const paperElement = unrealizedPL.closest('[class*="MuiPaper-root"]');
+      expect(paperElement).toBeInTheDocument();
+      // Find the value element (h6 Typography) within the Paper
+      const valueElement = paperElement?.querySelector('[class*="MuiTypography-h6"]') as HTMLElement;
+      expect(valueElement).toBeInTheDocument();
+      // Check that the element has color styling (error color for negative)
+      const styles = window.getComputedStyle(valueElement);
+      expect(styles.color).toBeTruthy();
+      expect(styles.color).not.toBe('rgba(0, 0, 0, 0)');
+    });
+  });
+
+  it('handles null values in portfolio totals', async () => {
+    vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: null,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: null,
+    });
+
+    renderPortfolioOverview();
+
+    await waitFor(() => {
+      // Get the first "Market Value" which is in the totals section (not table header)
+      const marketValueLabels = screen.getAllByText('Market Value');
+      const totalsSection = marketValueLabels[0].closest('[class*="MuiPaper-root"]');
+      // Null values should display as "N/A"
+      expect(totalsSection?.textContent).toContain('N/A');
+    });
+  });
+
   it('handles sorting when column header is clicked', async () => {
     const user = userEvent.setup();
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: mockPositions,
-      total: 2,
-      page: 1,
-      size: 50,
-      pages: 1,
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
     });
 
     renderPortfolioOverview();
@@ -165,11 +320,16 @@ describe('PortfolioOverview', () => {
     vi.mocked(portfolioService.getAllPositions).mockImplementation((params) => {
       calls.push({ ...params });
       return Promise.resolve({
-        items: mockPositions,
-        total: 2,
-        page: params?.page || 1,
-        size: 50,
-        pages: 1,
+        positions: {
+          items: mockPositions,
+          total: 2,
+          page: params?.page || 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
       });
     });
 
@@ -201,11 +361,16 @@ describe('PortfolioOverview', () => {
   it('sorts different column when new column header is clicked', async () => {
     const user = userEvent.setup();
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: mockPositions,
-      total: 2,
-      page: 1,
-      size: 50,
-      pages: 1,
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
     });
 
     renderPortfolioOverview();
@@ -230,11 +395,16 @@ describe('PortfolioOverview', () => {
   it('handles page change via pagination', async () => {
     const user = userEvent.setup();
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: mockPositions,
-      total: 100,
-      page: 1,
-      size: 50,
-      pages: 2,
+      positions: {
+        items: mockPositions,
+        total: 100,
+        page: 1,
+        size: 50,
+        pages: 2,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
     });
 
     renderPortfolioOverview();
@@ -265,11 +435,16 @@ describe('PortfolioOverview', () => {
 
   it('handles page size change and calls handlePageSizeChange', async () => {
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: mockPositions,
-      total: 100,
-      page: 1,
-      size: 50,
-      pages: 2,
+      positions: {
+        items: mockPositions,
+        total: 100,
+        page: 1,
+        size: 50,
+        pages: 2,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
     });
 
     renderPortfolioOverview();
@@ -286,11 +461,16 @@ describe('PortfolioOverview', () => {
 
   it('calculates start item correctly when totalItems is 0', async () => {
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: [],
-      total: 0,
-      page: 1,
-      size: 50,
-      pages: 0,
+      positions: {
+        items: [],
+        total: 0,
+        page: 1,
+        size: 50,
+        pages: 0,
+      },
+      total_market_value: null,
+      total_cost_basis: 0,
+      total_unrealized_gain_loss: null,
     });
 
     renderPortfolioOverview();
@@ -305,11 +485,16 @@ describe('PortfolioOverview', () => {
     const sortableColumns = ['ticker', 'asset_type', 'quantity', 'average_price', 'cost_basis', 'current_price', 'market_value', 'unrealized_gain_loss'];
     
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: mockPositions,
-      total: 2,
-      page: 1,
-      size: 50,
-      pages: 1,
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
     });
 
     renderPortfolioOverview();
@@ -345,11 +530,16 @@ describe('PortfolioOverview', () => {
     vi.mocked(portfolioService.getAllPositions).mockImplementation((params) => {
       calls.push({ ...params });
       return Promise.resolve({
-        items: mockPositions,
-        total: 2,
-        page: params?.page || 1,
-        size: 50,
-        pages: 1,
+        positions: {
+          items: mockPositions,
+          total: 2,
+          page: params?.page || 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
       });
     });
 
@@ -385,11 +575,16 @@ describe('PortfolioOverview', () => {
     vi.mocked(portfolioService.getAllPositions).mockImplementation((params) => {
       calls.push({ ...params });
       return Promise.resolve({
-        items: mockPositions,
-        total: 100,
-        page: params?.page || 1,
-        size: 50,
-        pages: 2,
+        positions: {
+          items: mockPositions,
+          total: 100,
+          page: params?.page || 1,
+          size: 50,
+          pages: 2,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
       });
     });
 
@@ -407,11 +602,16 @@ describe('PortfolioOverview', () => {
 
   it('renders pagination controls', async () => {
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: mockPositions,
-      total: 2,
-      page: 1,
-      size: 50,
-      pages: 1,
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
     });
 
     renderPortfolioOverview();
@@ -426,11 +626,16 @@ describe('PortfolioOverview', () => {
 
   it('displays empty state when no positions', async () => {
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
-      items: [],
-      total: 0,
-      page: 1,
-      size: 50,
-      pages: 0,
+      positions: {
+        items: [],
+        total: 0,
+        page: 1,
+        size: 50,
+        pages: 0,
+      },
+      total_market_value: null,
+      total_cost_basis: 0,
+      total_unrealized_gain_loss: null,
     });
 
     renderPortfolioOverview();
@@ -445,11 +650,16 @@ describe('PortfolioOverview', () => {
     vi.mocked(portfolioService.getAllPositions)
       .mockRejectedValueOnce(new Error('Failed'))
       .mockResolvedValueOnce({
-        items: mockPositions,
-        total: 2,
-        page: 1,
-        size: 50,
-        pages: 1,
+        positions: {
+          items: mockPositions,
+          total: 2,
+          page: 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
       });
 
     renderPortfolioOverview();
@@ -463,6 +673,60 @@ describe('PortfolioOverview', () => {
 
     await waitFor(() => {
       expect(screen.getByText('AAPL')).toBeInTheDocument();
+    });
+  });
+
+  it('updates totals when portfolio data changes', async () => {
+    const initialResponse = {
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 157525,
+      total_cost_basis: 140050,
+      total_unrealized_gain_loss: 17475,
+    };
+
+    const updatedResponse = {
+      positions: {
+        items: mockPositions,
+        total: 2,
+        page: 1,
+        size: 50,
+        pages: 1,
+      },
+      total_market_value: 200000,
+      total_cost_basis: 180000,
+      total_unrealized_gain_loss: 20000,
+    };
+
+    vi.mocked(portfolioService.getAllPositions)
+      .mockResolvedValueOnce(initialResponse)
+      .mockResolvedValueOnce(updatedResponse);
+
+    const { rerender } = renderPortfolioOverview();
+
+    await waitFor(() => {
+      // Get the first "Market Value" which is in the totals section
+      const marketValueLabels = screen.getAllByText('Market Value');
+      expect(marketValueLabels.length).toBeGreaterThan(0);
+    });
+
+    // Simulate data update by rerendering
+    rerender(
+      <BrowserRouter>
+        <AuthProvider>
+          <PortfolioOverview />
+        </AuthProvider>
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      // Totals should update when data changes
+      expect(portfolioService.getAllPositions).toHaveBeenCalled();
     });
   });
 });

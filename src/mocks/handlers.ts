@@ -95,12 +95,30 @@ export const handlers = [
     const total = sortedData.length;
     const pages = Math.ceil(total / size);
 
+    // Calculate portfolio totals from all positions (not just paginated)
+    const totalMarketValue = sortedData.reduce((sum, pos) => {
+      return sum + (pos.market_value ?? 0);
+    }, 0);
+    
+    const totalCostBasis = sortedData.reduce((sum, pos) => {
+      return sum + (pos.cost_basis ?? 0);
+    }, 0);
+    
+    const totalUnrealizedGainLoss = sortedData.reduce((sum, pos) => {
+      return sum + (pos.unrealized_gain_loss ?? 0);
+    }, 0);
+
     return HttpResponse.json({
-      items: paginatedData,
-      total,
-      page,
-      size,
-      pages,
+      positions: {
+        items: paginatedData,
+        total,
+        page,
+        size,
+        pages,
+      },
+      total_market_value: totalMarketValue > 0 ? totalMarketValue : null,
+      total_cost_basis: totalCostBasis,
+      total_unrealized_gain_loss: totalUnrealizedGainLoss !== 0 ? totalUnrealizedGainLoss : null,
     });
   }),
 ];

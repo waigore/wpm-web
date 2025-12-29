@@ -25,11 +25,16 @@ describe('portfolioService', () => {
   describe('getAllPositions', () => {
     it('should fetch positions with default parameters', async () => {
       const mockResponse = {
-        items: [],
-        total: 0,
-        page: 1,
-        size: 50,
-        pages: 0,
+        positions: {
+          items: [],
+          total: 0,
+          page: 1,
+          size: 50,
+          pages: 0,
+        },
+        total_market_value: null,
+        total_cost_basis: 0,
+        total_unrealized_gain_loss: null,
       };
 
       vi.mocked(authService.getToken).mockReturnValue('mock-token');
@@ -38,6 +43,10 @@ describe('portfolioService', () => {
       const result = await getAllPositions();
 
       expect(result).toEqual(mockResponse);
+      expect(result.positions).toBeDefined();
+      expect(result.total_market_value).toBeNull();
+      expect(result.total_cost_basis).toBe(0);
+      expect(result.total_unrealized_gain_loss).toBeNull();
       expect(DefaultService.getAllPositionsEndpointPortfolioAllGet).toHaveBeenCalledWith(
         1,
         50,
@@ -49,11 +58,16 @@ describe('portfolioService', () => {
 
     it('should fetch positions with custom parameters', async () => {
       const mockResponse = {
-        items: [],
-        total: 0,
-        page: 2,
-        size: 20,
-        pages: 0,
+        positions: {
+          items: [],
+          total: 0,
+          page: 2,
+          size: 20,
+          pages: 0,
+        },
+        total_market_value: 100000,
+        total_cost_basis: 90000,
+        total_unrealized_gain_loss: 10000,
       };
 
       vi.mocked(authService.getToken).mockReturnValue('mock-token');
@@ -67,6 +81,10 @@ describe('portfolioService', () => {
       });
 
       expect(result).toEqual(mockResponse);
+      expect(result.positions).toBeDefined();
+      expect(result.total_market_value).toBe(100000);
+      expect(result.total_cost_basis).toBe(90000);
+      expect(result.total_unrealized_gain_loss).toBe(10000);
       expect(DefaultService.getAllPositionsEndpointPortfolioAllGet).toHaveBeenCalledWith(
         2,
         20,
@@ -77,11 +95,16 @@ describe('portfolioService', () => {
 
     it('should use default values for undefined parameters', async () => {
       const mockResponse = {
-        items: [],
-        total: 0,
-        page: 1,
-        size: 50,
-        pages: 0,
+        positions: {
+          items: [],
+          total: 0,
+          page: 1,
+          size: 50,
+          pages: 0,
+        },
+        total_market_value: null,
+        total_cost_basis: 0,
+        total_unrealized_gain_loss: null,
       };
 
       vi.mocked(authService.getToken).mockReturnValue('mock-token');
@@ -98,6 +121,34 @@ describe('portfolioService', () => {
         'ticker',
         'asc'
       );
+    });
+
+    it('should return PortfolioAllResponse with totals', async () => {
+      const mockResponse = {
+        positions: {
+          items: [],
+          total: 5,
+          page: 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 231062.5,
+        total_cost_basis: 205050,
+        total_unrealized_gain_loss: 26012.5,
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAllPositionsEndpointPortfolioAllGet).mockResolvedValue(mockResponse);
+
+      const result = await getAllPositions();
+
+      expect(result).toHaveProperty('positions');
+      expect(result).toHaveProperty('total_market_value');
+      expect(result).toHaveProperty('total_cost_basis');
+      expect(result).toHaveProperty('total_unrealized_gain_loss');
+      expect(result.total_market_value).toBe(231062.5);
+      expect(result.total_cost_basis).toBe(205050);
+      expect(result.total_unrealized_gain_loss).toBe(26012.5);
     });
   });
 });

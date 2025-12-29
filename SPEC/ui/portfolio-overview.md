@@ -10,7 +10,7 @@ Display user's portfolio positions in a sortable table format. Shows all positio
 
 ### Visual Structure
 - Page header with title: "Portfolio Overview" or "My Portfolio"
-- Summary section (optional): Total positions count, total market value, total gain/loss
+- Portfolio totals section (required): Single row displaying total market value, total unrealized gain/loss, and total cost basis
 - Sortable table displaying positions (server-side sorted)
 - Pagination controls (below table): Page navigation, page size selector, page info
 - Loading indicator during data fetch
@@ -23,11 +23,16 @@ PortfolioOverview
 ├── MUI Container
 │   ├── MUI Box (header section)
 │   │   └── MUI Typography (variant="h4", title)
-│   ├── MUI Grid or MUI Stack (summary section, optional)
-│   │   ├── MUI Card or MUI Paper
-│   │   │   ├── Total Count: {total_count}
-│   │   │   ├── Total Market Value: {formatted currency}
-│   │   │   └── Total Gain/Loss: {formatted currency with color}
+│   ├── MUI Box (portfolio totals section, single row)
+│   │   ├── MUI Paper or MUI Card (Market Value)
+│   │   │   ├── MUI Typography (label: "Market Value")
+│   │   │   └── MUI Typography (value: {total_market_value}, formatted currency)
+│   │   ├── MUI Paper or MUI Card (Cost Basis)
+│   │   │   ├── MUI Typography (label: "Cost Basis")
+│   │   │   └── MUI Typography (value: {total_cost_basis}, formatted currency)
+│   │   └── MUI Paper or MUI Card (Unrealized Gain/Loss)
+│   │       ├── MUI Typography (label: "Unrealized P/L")
+│   │       └── MUI Typography (value: {total_unrealized_gain_loss}, formatted currency, colored)
 │   ├── MUI CircularProgress (loading, conditionally rendered, centered)
 │   ├── MUI Alert (error, conditionally rendered, severity="error")
 │   │   ├── Error text
@@ -70,6 +75,9 @@ PortfolioOverview
 - `pageSize: number` - Number of items per page (default: 50, options: 10, 20, 50, 100)
 - `totalItems: number` - Total number of positions across all pages
 - `totalPages: number` - Total number of pages
+- `totalMarketValue: number | null` - Total market value across all positions (from API)
+- `totalUnrealizedGainLoss: number | null` - Total unrealized gain/loss across all positions (from API)
+- `totalCostBasis: number` - Total cost basis across all positions (from API)
 
 ## Interactions
 
@@ -134,11 +142,16 @@ PortfolioOverview
 - **Response (200)**: 
   ```typescript
   {
-    items: Position[],
-    total: number,
-    page: number,
-    size: number,
-    pages: number
+    positions: {
+      items: Position[],
+      total: number,
+      page: number,
+      size: number,
+      pages: number
+    },
+    total_market_value: number | null,
+    total_unrealized_gain_loss: number | null,
+    total_cost_basis: number
   }
   ```
 - **Response (400)**: Bad Request (invalid sort_by field)
@@ -147,7 +160,8 @@ PortfolioOverview
 - **Response (500)**: Server error
 
 ### Service Function
-- `portfolioService.getAllPositions(params?: { page?: number, size?: number, sort_by?: string, sort_order?: 'asc' | 'desc' }): Promise<Page_Position_>`
+- `portfolioService.getAllPositions(params?: { page?: number, size?: number, sort_by?: string, sort_order?: 'asc' | 'desc' }): Promise<PortfolioAllResponse>`
+- Returns `PortfolioAllResponse` containing `positions` (Page_Position_), `total_market_value`, `total_unrealized_gain_loss`, and `total_cost_basis`
 - Includes JWT token from AuthContext in Authorization header
 - Passes query parameters to API endpoint
 
@@ -245,14 +259,16 @@ PortfolioOverview
 
 ### Display Format
 - **Currency values** (cost_basis, market_value, unrealized_gain_loss, average_price, current_price): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
+- **Portfolio totals** (total_market_value, total_unrealized_gain_loss, total_cost_basis): Format as USD currency with 2 decimal places using `formatCurrency()` utility
 - **Quantity**: Display in full precision as returned from the API (arbitrary precision). The quantity should display exactly as returned from the API without decimal place constraints (e.g., "100", "0.5", "0.123456789").
 - **Percentages** (if calculated): Format as percentage with 2 decimal places (e.g., "+5.23%")
-- **Null values**: Display as "N/A" or "-"
+- **Null values**: Display as "N/A" or "-" (applies to total_market_value and total_unrealized_gain_loss which may be null)
 
 ### Gain/Loss Styling
-- Positive unrealized gain: Green text/color
-- Negative unrealized gain: Red text/color
+- Positive unrealized gain: Green text/color (MUI success color)
+- Negative unrealized gain: Red text/color (MUI error color)
 - Zero or null: Default text color
+- Portfolio totals row: Unrealized gain/loss card uses color styling based on value (positive/negative/null)
 
 ## Accessibility
 
@@ -314,7 +330,8 @@ PortfolioOverview
 ## Styling Notes (MUI)
 - Page uses MUI `Container` for consistent page width and margins
 - Header uses MUI `Typography` with variant="h4" or "h5"
-- Summary cards use MUI `Card` or `Paper` components with elevation
+- Portfolio totals section: Single row using MUI `Box` with `display: flex`, `gap: 2`, positioned directly underneath page title
+- Portfolio totals cards: Each total displayed in MUI `Paper` or `Card` component with elevation, consistent padding and spacing
 - Table uses MUI `TableContainer` with `Paper` and `Table` components
 - Sortable headers use MUI `TableSortLabel` component with built-in sort indicators
 - Table cells use MUI `TableCell` with proper alignment (numeric right-aligned, text left-aligned)

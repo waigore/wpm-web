@@ -14,6 +14,7 @@ import {
   FormControl,
   InputLabel,
   CircularProgress,
+  Paper,
 } from '@mui/material';
 import { Table as TableComponent } from '../../components/Table/Table';
 import { TableHeader } from '../../components/TableHeader/TableHeader';
@@ -21,6 +22,7 @@ import { TableRow } from '../../components/TableRow/TableRow';
 import { ErrorMessage } from '../../components/ErrorMessage/ErrorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { usePortfolio } from '../../hooks/usePortfolio';
+import { formatCurrency } from '../../utils/formatters';
 import logger from '../../utils/logger';
 
 type SortByField = 'ticker' | 'asset_type' | 'quantity' | 'average_price' | 'cost_basis' | 'current_price' | 'market_value' | 'unrealized_gain_loss';
@@ -55,6 +57,9 @@ export const PortfolioOverview: React.FC = () => {
     totalPages,
     loading,
     error,
+    totalMarketValue,
+    totalUnrealizedGainLoss,
+    totalCostBasis,
     refetch,
   } = usePortfolio({
     page: currentPage,
@@ -120,6 +125,52 @@ export const PortfolioOverview: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Portfolio Overview
       </Typography>
+
+      {!loading && !error && (
+        <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+          <Paper elevation={2} sx={{ flex: 1, minWidth: 200, p: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Market Value
+            </Typography>
+            <Typography variant="h6" component="div">
+              {formatCurrency(totalMarketValue)}
+            </Typography>
+          </Paper>
+          <Paper elevation={2} sx={{ flex: 1, minWidth: 200, p: 2 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Cost Basis
+            </Typography>
+            <Typography variant="h6" component="div">
+              {formatCurrency(totalCostBasis)}
+            </Typography>
+          </Paper>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              flex: 1, 
+              minWidth: 200, 
+              p: 2,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              Unrealized P/L
+            </Typography>
+            <Typography 
+              variant="h6" 
+              component="div"
+              sx={{
+                color: totalUnrealizedGainLoss === null 
+                  ? 'text.primary' 
+                  : totalUnrealizedGainLoss >= 0 
+                    ? 'success.main' 
+                    : 'error.main'
+              }}
+            >
+              {formatCurrency(totalUnrealizedGainLoss)}
+            </Typography>
+          </Paper>
+        </Box>
+      )}
 
       {loading && (
         <Box display="flex" justifyContent="center" alignItems="center" p={4}>

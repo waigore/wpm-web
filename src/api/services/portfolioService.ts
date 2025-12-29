@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { Page_Position_ } from '../client';
+import type { PortfolioAllResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 
@@ -16,11 +16,11 @@ export interface PortfolioParams {
 /**
  * Get all portfolio positions with pagination and sorting
  * @param params - Optional parameters for pagination and sorting
- * @returns Page_Position_ with paginated positions
+ * @returns PortfolioAllResponse with paginated positions and portfolio totals
  */
 export async function getAllPositions(
   params?: PortfolioParams
-): Promise<Page_Position_> {
+): Promise<PortfolioAllResponse> {
   // Ensure token is set in OpenAPI config (getToken already does this)
   getToken();
 
