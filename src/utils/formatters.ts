@@ -49,3 +49,16 @@ export function formatPercentage(value: number | null | undefined, decimals: num
   return `${formatted}%`;
 }
 
+/**
+ * Format a quantity with arbitrary precision (preserves full precision from API)
+ * @param value - The numeric value to format
+ * @returns Formatted quantity string with full precision as returned from API
+ */
+export function formatQuantity(value: number | null | undefined): string {
+  if (value === null || value === undefined || isNaN(value)) {
+    return 'N/A';
+  }
+  // Convert to string to preserve full precision as returned from API
+  return String(value);
+}
+

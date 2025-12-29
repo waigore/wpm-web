@@ -245,7 +245,7 @@ PortfolioOverview
 
 ### Display Format
 - **Currency values** (cost_basis, market_value, unrealized_gain_loss, average_price, current_price): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
-- **Quantity**: Format with appropriate decimal places (e.g., "100.00" or "100" if whole number)
+- **Quantity**: Display in full precision as returned from the API (arbitrary precision). The quantity should display exactly as returned from the API without decimal place constraints (e.g., "100", "0.5", "0.123456789").
 - **Percentages** (if calculated): Format as percentage with 2 decimal places (e.g., "+5.23%")
 - **Null values**: Display as "N/A" or "-"
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, formatNumber, formatPercentage } from './formatters';
+import { formatCurrency, formatNumber, formatPercentage, formatQuantity } from './formatters';
 
 describe('formatters', () => {
   describe('formatCurrency', () => {
@@ -45,6 +45,40 @@ describe('formatters', () => {
 
     it('returns N/A for null', () => {
       expect(formatPercentage(null)).toBe('N/A');
+    });
+  });
+
+  describe('formatQuantity', () => {
+    it('preserves full precision for whole numbers', () => {
+      expect(formatQuantity(100)).toBe('100');
+    });
+
+    it('preserves full precision for decimal numbers', () => {
+      expect(formatQuantity(0.5)).toBe('0.5');
+    });
+
+    it('preserves full precision for numbers with many decimal places', () => {
+      expect(formatQuantity(0.123456789)).toBe('0.123456789');
+    });
+
+    it('preserves full precision for very small numbers', () => {
+      expect(formatQuantity(0.000001)).toBe('0.000001');
+    });
+
+    it('preserves full precision for large numbers', () => {
+      expect(formatQuantity(1000000.123456)).toBe('1000000.123456');
+    });
+
+    it('returns N/A for null', () => {
+      expect(formatQuantity(null)).toBe('N/A');
+    });
+
+    it('returns N/A for undefined', () => {
+      expect(formatQuantity(undefined)).toBe('N/A');
+    });
+
+    it('handles zero', () => {
+      expect(formatQuantity(0)).toBe('0');
     });
   });
 });

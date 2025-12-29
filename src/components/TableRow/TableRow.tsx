@@ -1,7 +1,7 @@
 import React from 'react';
 import { TableRow as MuiTableRow, TableCell, TableRowProps as MuiTableRowProps } from '@mui/material';
 import type { Position } from '../../api/client';
-import { formatCurrency, formatNumber } from '../../utils/formatters';
+import { formatCurrency, formatQuantity } from '../../utils/formatters';
 
 export interface TableRowProps extends Omit<MuiTableRowProps, 'children'> {
   position: Position;
@@ -19,7 +19,7 @@ export const TableRow: React.FC<TableRowProps> = ({ position, ...props }) => {
     <MuiTableRow {...props}>
       <TableCell>{position.ticker}</TableCell>
       <TableCell>{position.asset_type}</TableCell>
-      <TableCell align="right">{formatNumber(position.quantity)}</TableCell>
+      <TableCell align="right">{formatQuantity(position.quantity)}</TableCell>
       <TableCell align="right">{formatCurrency(position.average_price)}</TableCell>
       <TableCell align="right">{formatCurrency(position.cost_basis)}</TableCell>
       <TableCell align="right">{formatCurrency(position.current_price)}</TableCell>
