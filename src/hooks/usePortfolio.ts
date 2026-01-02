@@ -41,8 +41,8 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
     try {
       const response = await getAllPositions({
         ...params,
-        page: currentPage,
-        size: pageSize,
+        page: params?.page ?? currentPage,
+        size: params?.size ?? pageSize,
       });
 
       setPositions(response.positions.items || []);
@@ -83,7 +83,7 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
   useEffect(() => {
     fetchPositions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, currentPage, pageSize, params?.sort_by, params?.sort_order]);
+  }, [isAuthenticated, currentPage, pageSize, params?.page, params?.size, params?.sort_by, params?.sort_order]);
 
   const refetch = async () => {
     await fetchPositions();

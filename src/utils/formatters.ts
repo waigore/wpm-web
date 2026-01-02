@@ -62,3 +62,27 @@ export function formatQuantity(value: number | null | undefined): string {
   return String(value);
 }
 
+/**
+ * Format an ISO date string (YYYY-MM-DD) to a display format
+ * @param dateString - ISO date string (YYYY-MM-DD)
+ * @returns Formatted date string (e.g., "Jan 15, 2024")
+ */
+export function formatDate(dateString: string | null | undefined): string {
+  if (!dateString) {
+    return 'N/A';
+  }
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString; // Return original if invalid
+    }
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  } catch {
+    return dateString; // Return original if parsing fails
+  }
+}
+

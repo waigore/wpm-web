@@ -1,0 +1,123 @@
+[
+  {
+    "date": "2024-01-15",
+    "ticker": "AAPL",
+    "asset_type": "Stock",
+    "action": "Buy",
+    "order_instruction": "limit",
+    "quantity": 50.0,
+    "price": 150.50,
+    "cost_basis": 7525.0,
+    "market_price": 175.25,
+    "unrealized_profit_loss": 1237.5
+  },
+  {
+    "date": "2024-02-10",
+    "ticker": "AAPL",
+    "asset_type": "Stock",
+    "action": "Buy",
+    "order_instruction": "market",
+    "quantity": 50.0,
+    "price": 150.50,
+    "cost_basis": 7525.0,
+    "market_price": 175.25,
+    "unrealized_profit_loss": 1237.5
+  },
+  {
+    "date": "2024-03-05",
+    "ticker": "AAPL",
+    "asset_type": "Stock",
+    "action": "Sell",
+    "order_instruction": "limit",
+    "quantity": 10.0,
+    "price": 160.00,
+    "cost_basis": null,
+    "market_price": null,
+    "unrealized_profit_loss": null
+  },
+  {
+    "date": "2023-12-01",
+    "ticker": "GOOGL",
+    "asset_type": "Stock",
+    "action": "Buy",
+    "order_instruction": "lump sum",
+    "quantity": 25.0,
+    "price": 2500.0,
+    "cost_basis": 62500.0,
+    "market_price": 2800.0,
+    "unrealized_profit_loss": 7500.0
+  },
+  {
+    "date": "2024-01-20",
+    "ticker": "GOOGL",
+    "asset_type": "Stock",
+    "action": "Buy",
+    "order_instruction": "market",
+    "quantity": 25.0,
+    "price": 2500.0,
+    "cost_basis": 62500.0,
+    "market_price": 2800.0,
+    "unrealized_profit_loss": 7500.0
+  },
+  {
+    "date": "2024-01-10",
+    "ticker": "MSFT",
+    "asset_type": "Stock",
+    "action": "Buy",
+    "order_instruction": "limit",
+    "quantity": 30.0,
+    "price": 300.0,
+    "cost_basis": 9000.0,
+    "market_price": 380.50,
+    "unrealized_profit_loss": 2415.0
+  },
+  {
+    "date": "2024-02-15",
+    "ticker": "MSFT",
+    "asset_type": "Stock",
+    "action": "Buy",
+    "order_instruction": "market",
+    "quantity": 45.0,
+    "price": 300.0,
+    "cost_basis": 13500.0,
+    "market_price": 380.50,
+    "unrealized_profit_loss": 3622.5
+  },
+  {
+    "date": "2023-11-15",
+    "ticker": "BTC",
+    "asset_type": "Crypto",
+    "action": "Buy",
+    "order_instruction": "limit",
+    "quantity": 0.25,
+    "price": 45000.0,
+    "cost_basis": 11250.0,
+    "market_price": 50000.0,
+    "unrealized_profit_loss": 1250.0
+  },
+  {
+    "date": "2024-01-05",
+    "ticker": "BTC",
+    "asset_type": "Crypto",
+    "action": "Buy",
+    "order_instruction": "lump sum",
+    "quantity": 0.25,
+    "price": 45000.0,
+    "cost_basis": 11250.0,
+    "market_price": 50000.0,
+    "unrealized_profit_loss": 1250.0
+  },
+  {
+    "date": "2024-01-25",
+    "ticker": "TSLA",
+    "asset_type": "Stock",
+    "action": "Buy",
+    "order_instruction": "market",
+    "quantity": 25.0,
+    "price": 800.0,
+    "cost_basis": 20000.0,
+    "market_price": 850.0,
+    "unrealized_profit_loss": 1250.0
+  }
+]
+

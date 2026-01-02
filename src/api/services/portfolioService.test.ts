@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getAllPositions } from './portfolioService';
+import { getAllPositions, getAssetTrades } from './portfolioService';
 import { DefaultService } from '../client/services/DefaultService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import * as authService from './authService';
@@ -8,6 +8,7 @@ import * as authService from './authService';
 vi.mock('../client/services/DefaultService', () => ({
   DefaultService: {
     getAllPositionsEndpointPortfolioAllGet: vi.fn(),
+    getAssetTradesEndpointPortfolioAssetTickerGet: vi.fn(),
   },
 }));
 
@@ -149,6 +150,103 @@ describe('portfolioService', () => {
       expect(result.total_market_value).toBe(231062.5);
       expect(result.total_cost_basis).toBe(205050);
       expect(result.total_unrealized_gain_loss).toBe(26012.5);
+    });
+  });
+
+  describe('getAssetTrades', () => {
+    it('should fetch trades with default parameters', async () => {
+      const mockResponse = {
+        trades: {
+          items: [],
+          total: 0,
+          page: 1,
+          size: 20,
+          pages: 0,
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).mockResolvedValue(mockResponse);
+
+      const result = await getAssetTrades('AAPL');
+
+      expect(result).toEqual(mockResponse);
+      expect(result.trades).toBeDefined();
+      expect(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).toHaveBeenCalledWith(
+        'AAPL',
+        1,
+        20,
+        null,
+        null,
+        'date',
+        'asc'
+      );
+      expect(authService.getToken).toHaveBeenCalled();
+    });
+
+    it('should fetch trades with custom parameters', async () => {
+      const mockResponse = {
+        trades: {
+          items: [],
+          total: 0,
+          page: 2,
+          size: 50,
+          pages: 0,
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).mockResolvedValue(mockResponse);
+
+      const result = await getAssetTrades('GOOGL', {
+        page: 2,
+        size: 50,
+        sort_by: 'price',
+        sort_order: 'desc',
+        start_date: '2024-01-01',
+        end_date: '2024-12-31',
+      });
+
+      expect(result).toEqual(mockResponse);
+      expect(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).toHaveBeenCalledWith(
+        'GOOGL',
+        2,
+        50,
+        '2024-01-01',
+        '2024-12-31',
+        'price',
+        'desc'
+      );
+    });
+
+    it('should use default values for undefined parameters', async () => {
+      const mockResponse = {
+        trades: {
+          items: [],
+          total: 0,
+          page: 1,
+          size: 20,
+          pages: 0,
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).mockResolvedValue(mockResponse);
+
+      await getAssetTrades('MSFT', {
+        page: undefined,
+        size: undefined,
+      });
+
+      expect(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).toHaveBeenCalledWith(
+        'MSFT',
+        1,
+        20,
+        null,
+        null,
+        'date',
+        'asc'
+      );
     });
   });
 });

@@ -2,11 +2,19 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { TableRow } from './TableRow';
 import { Table as TableComponent } from '../Table/Table';
 import { TableHead, TableBody, TableRow as MuiTableRow, TableCell } from '@mui/material';
+import { BrowserRouter } from 'react-router-dom';
 
 const meta: Meta<typeof TableRow> = {
   title: 'Components/TableRow',
   component: TableRow,
   tags: ['autodocs'],
+  decorators: [
+    (Story) => (
+      <BrowserRouter>
+        <Story />
+      </BrowserRouter>
+    ),
+  ],
 };
 
 export default meta;
@@ -37,6 +45,7 @@ export const Default: Story = {
           <TableCell align="right">Current Price</TableCell>
           <TableCell align="right">Market Value</TableCell>
           <TableCell align="right">Gain/Loss</TableCell>
+          <TableCell align="right">Actions</TableCell>
         </MuiTableRow>
       </TableHead>
       <TableBody>
@@ -84,6 +93,7 @@ export const MultipleRows: Story = {
             <TableCell align="right">Current Price</TableCell>
             <TableCell align="right">Market Value</TableCell>
             <TableCell align="right">Gain/Loss</TableCell>
+            <TableCell align="right">Actions</TableCell>
           </MuiTableRow>
         </TableHead>
         <TableBody>
@@ -93,6 +103,40 @@ export const MultipleRows: Story = {
         </TableBody>
       </TableComponent>
     );
+  },
+};
+
+/**
+ * TableRow with menu showing the three-dot menu button.
+ * Clicking the menu reveals the "Trades" option which navigates to the asset trades page.
+ */
+export const WithMenu: Story = {
+  render: () => (
+    <TableComponent>
+      <TableHead>
+        <MuiTableRow>
+          <TableCell>Ticker</TableCell>
+          <TableCell>Asset Type</TableCell>
+          <TableCell align="right">Quantity</TableCell>
+          <TableCell align="right">Average Price</TableCell>
+          <TableCell align="right">Cost Basis</TableCell>
+          <TableCell align="right">Current Price</TableCell>
+          <TableCell align="right">Market Value</TableCell>
+          <TableCell align="right">Gain/Loss</TableCell>
+          <TableCell align="right">Actions</TableCell>
+        </MuiTableRow>
+      </TableHead>
+      <TableBody>
+        <TableRow position={mockPosition} />
+      </TableBody>
+    </TableComponent>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'TableRow with three-dot menu button in the Actions column. Clicking the menu button opens a menu with a "Trades" option that navigates to the asset trades page.',
+      },
+    },
   },
 };
 

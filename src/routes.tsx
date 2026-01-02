@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { Login } from './pages/Login/Login';
 import { PortfolioOverview } from './pages/PortfolioOverview/PortfolioOverview';
+import { AssetTrades } from './pages/AssetTrades/AssetTrades';
 import { ProtectedLayout } from './components/ProtectedLayout/ProtectedLayout';
 import { useAuth } from './hooks/useAuth';
 import React from 'react';
@@ -32,6 +33,16 @@ export const routes = [
       <ProtectedRoute>
         <ProtectedLayout>
           <PortfolioOverview />
+        </ProtectedLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/portfolio/asset/:ticker',
+    element: (
+      <ProtectedRoute>
+        <ProtectedLayout>
+          <AssetTrades />
         </ProtectedLayout>
       </ProtectedRoute>
     ),

@@ -1,8 +1,21 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TableRow } from './TableRow';
 import { Table, TableHead, TableBody, TableRow as MuiTableRow, TableCell } from '@mui/material';
+import { BrowserRouter } from 'react-router-dom';
 import type { Position } from '../../api/client';
+
+// Mock useNavigate
+const mockNavigate = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 const mockPosition: Position = {
   ticker: 'AAPL',
@@ -16,9 +29,17 @@ const mockPosition: Position = {
   unrealized_gain_loss: 2475.0,
 };
 
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(<BrowserRouter>{component}</BrowserRouter>);
+};
+
 describe('TableRow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders position data correctly', () => {
-    render(
+    renderWithRouter(
       <Table>
         <TableHead>
           <MuiTableRow>
@@ -30,6 +51,7 @@ describe('TableRow', () => {
             <TableCell>Current Price</TableCell>
             <TableCell>Market Value</TableCell>
             <TableCell>Gain/Loss</TableCell>
+            <TableCell>Actions</TableCell>
           </MuiTableRow>
         </TableHead>
         <TableBody>
@@ -50,7 +72,7 @@ describe('TableRow', () => {
       unrealized_gain_loss: null,
     };
 
-    render(
+    renderWithRouter(
       <Table>
         <TableBody>
           <TableRow position={positionWithNull} />
@@ -62,7 +84,7 @@ describe('TableRow', () => {
   });
 
   it('formats currency values correctly', () => {
-    render(
+    renderWithRouter(
       <Table>
         <TableBody>
           <TableRow position={mockPosition} />
@@ -76,7 +98,7 @@ describe('TableRow', () => {
   });
 
   it('applies correct styling for positive gain/loss', () => {
-    const { container } = render(
+    const { container } = renderWithRouter(
       <Table>
         <TableBody>
           <TableRow position={mockPosition} />
@@ -95,7 +117,7 @@ describe('TableRow', () => {
       unrealized_gain_loss: -100.0,
     };
 
-    const { container } = render(
+    const { container } = renderWithRouter(
       <Table>
         <TableBody>
           <TableRow position={negativePosition} />
@@ -105,6 +127,63 @@ describe('TableRow', () => {
 
     const row = container.querySelector('.MuiTableRow-root');
     expect(row).toBeInTheDocument();
+  });
+
+  it('renders menu button', () => {
+    renderWithRouter(
+      <Table>
+        <TableBody>
+          <TableRow position={mockPosition} />
+        </TableBody>
+      </Table>
+    );
+
+    const menuButton = screen.getByLabelText(`Actions for ${mockPosition.ticker}`);
+    expect(menuButton).toBeInTheDocument();
+  });
+
+  it('opens menu when menu button is clicked', async () => {
+    const user = userEvent.setup();
+    renderWithRouter(
+      <Table>
+        <TableBody>
+          <TableRow position={mockPosition} />
+        </TableBody>
+      </Table>
+    );
+
+    const menuButton = screen.getByLabelText(`Actions for ${mockPosition.ticker}`);
+    await user.click(menuButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Trades')).toBeInTheDocument();
+    });
+  });
+
+  it('navigates to asset trades page when Trades is clicked', async () => {
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <Table>
+        <TableBody>
+          <TableRow position={mockPosition} />
+        </TableBody>
+      </Table>
+    );
+
+    const menuButton = screen.getByLabelText(`Actions for ${mockPosition.ticker}`);
+    await user.click(menuButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Trades')).toBeInTheDocument();
+    });
+
+    const tradesMenuItem = screen.getByText('Trades');
+    await user.click(tradesMenuItem);
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(`/portfolio/asset/${mockPosition.ticker}`);
+    });
   });
 });
 

@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 
@@ -11,6 +11,15 @@ export interface PortfolioParams {
   size?: number;
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
+}
+
+export interface AssetTradesParams {
+  page?: number;
+  size?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  start_date?: string;
+  end_date?: string;
 }
 
 /**
@@ -32,6 +41,37 @@ export async function getAllPositions(
   return DefaultService.getAllPositionsEndpointPortfolioAllGet(
     page,
     size,
+    sortBy,
+    sortOrder
+  );
+}
+
+/**
+ * Get all trades for a specific asset with pagination, sorting, and optional date filtering
+ * @param ticker - Asset ticker symbol
+ * @param params - Optional parameters for pagination, sorting, and date filtering
+ * @returns PortfolioAssetTradesResponse with paginated trades
+ */
+export async function getAssetTrades(
+  ticker: string,
+  params?: AssetTradesParams
+): Promise<PortfolioAssetTradesResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  const page = params?.page ?? 1;
+  const size = params?.size ?? 20;
+  const sortBy = params?.sort_by ?? 'date';
+  const sortOrder = params?.sort_order ?? 'asc';
+  const startDate = params?.start_date ?? null;
+  const endDate = params?.end_date ?? null;
+
+  return DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet(
+    ticker,
+    page,
+    size,
+    startDate,
+    endDate,
     sortBy,
     sortOrder
   );

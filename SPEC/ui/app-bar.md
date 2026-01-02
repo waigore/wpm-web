@@ -132,3 +132,7 @@ AppBar
 - AppBar appears on all protected routes (e.g., `/portfolio`)
 - AppBar does not appear on public routes (e.g., `/login`)
 
+
+
+
+
