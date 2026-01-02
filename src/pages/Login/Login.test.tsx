@@ -152,7 +152,7 @@ describe('Login', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid username or password/i)).toBeInTheDocument();
+      expect(screen.getByText(/authentication failed/i)).toBeInTheDocument();
     });
   });
 
@@ -177,14 +177,14 @@ describe('Login', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid/i)).toBeInTheDocument();
+      expect(screen.getByText(/authentication/i)).toBeInTheDocument();
     });
 
     // Start typing to clear error
     await user.type(usernameInput, 'x');
 
     await waitFor(() => {
-      expect(screen.queryByText(/invalid/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/authentication/i)).not.toBeInTheDocument();
     });
   });
 

@@ -2,25 +2,13 @@ import React from 'react';
 import { TableRow as MuiTableRow, TableCell, TableRowProps as MuiTableRowProps } from '@mui/material';
 import type { Trade } from '../../api/client';
 import { formatCurrency, formatQuantity, formatDate } from '../../utils/formatters';
+import { getGainLossColor, getActionColor } from '../../utils/colorHelpers';
 
 export interface TradeTableRowProps extends Omit<MuiTableRowProps, 'children'> {
   trade: Trade;
 }
 
 export const TradeTableRow: React.FC<TradeTableRowProps> = ({ trade, ...props }) => {
-  const getProfitLossColor = (value: number | null | undefined): string => {
-    if (value === null || value === undefined) return 'inherit';
-    if (value > 0) return 'success.main';
-    if (value < 0) return 'error.main';
-    return 'inherit';
-  };
-
-  const getActionColor = (action: string): string => {
-    if (action === 'Buy') return 'success.main';
-    if (action === 'Sell') return 'error.main';
-    return 'inherit';
-  };
-
   const capitalizeFirst = (str: string): string => {
     // Handle multi-word strings like "lump sum" by capitalizing each word
     return str
@@ -52,7 +40,7 @@ export const TradeTableRow: React.FC<TradeTableRowProps> = ({ trade, ...props })
       <TableCell
         align="right"
         sx={{
-          color: getProfitLossColor(trade.unrealized_profit_loss),
+          color: getGainLossColor(trade.unrealized_profit_loss),
           fontWeight: 'medium',
         }}
       >

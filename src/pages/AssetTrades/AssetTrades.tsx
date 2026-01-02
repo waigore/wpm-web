@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -8,11 +8,6 @@ import {
   TableBody,
   TableRow as MuiTableRow,
   TableCell as MuiTableCell,
-  Pagination,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   CircularProgress,
   Paper,
 } from '@mui/material';
@@ -20,29 +15,20 @@ import { Table as TableComponent } from '../../components/Table/Table';
 import { TableHeader } from '../../components/TableHeader/TableHeader';
 import { TradeTableRow } from '../../components/TradeTableRow/TradeTableRow';
 import { ErrorMessage } from '../../components/ErrorMessage/ErrorMessage';
+import { PaginationControls } from '../../components/PaginationControls/PaginationControls';
 import { useAuth } from '../../hooks/useAuth';
 import { useAssetTrades } from '../../hooks/useAssetTrades';
+import { useTableSort } from '../../hooks/useTableSort';
 import logger from '../../utils/logger';
 
 type SortByField = 'date' | 'ticker' | 'asset_type' | 'action' | 'order_instruction' | 'quantity' | 'price' | 'cost_basis' | 'market_price' | 'unrealized_profit_loss';
-type SortOrder = 'asc' | 'desc';
 
 export const AssetTrades: React.FC = () => {
   const { ticker } = useParams<{ ticker: string }>();
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [sortBy, setSortBy] = useState<SortByField>('date');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const { sortBy, sortOrder, handleSort: handleSortChange, getSortDirection } = useTableSort<SortByField>('date');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      logger.info('Redirecting to login - not authenticated', { context: 'AssetTrades' });
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (isAuthenticated && ticker) {
@@ -66,11 +52,9 @@ export const AssetTrades: React.FC = () => {
   });
 
   const handleSort = (column: SortByField) => {
-    const newSortOrder: SortOrder =
-      sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
-    setSortBy(column);
-    setSortOrder(newSortOrder);
+    handleSortChange(column);
     setCurrentPage(1); // Reset to first page on sort
+    const newSortOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
     logger.info(`Sorting trades by ${column} ${newSortOrder}`, { context: 'AssetTrades' });
   };
 
@@ -79,8 +63,7 @@ export const AssetTrades: React.FC = () => {
     logger.info(`Navigated to page ${page}`, { context: 'AssetTrades' });
   };
 
-  const handlePageSizeChange = (event: any) => {
-    const newSize = event.target.value as number;
+  const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     setCurrentPage(1); // Reset to first page on size change
     logger.info(`Page size changed to ${newSize}`, { context: 'AssetTrades' });
@@ -104,16 +87,9 @@ export const AssetTrades: React.FC = () => {
     }
   });
 
-  if (!isAuthenticated || !ticker) {
+  if (!ticker) {
     return null;
   }
-
-  const getSortDirection = (column: SortByField): 'asc' | 'desc' | false => {
-    if (sortBy === column) {
-      return sortOrder;
-    }
-    return false;
-  };
 
   const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0;
   const endItem = Math.min(currentPage * pageSize, totalItems);
@@ -253,33 +229,16 @@ export const AssetTrades: React.FC = () => {
             </TableBody>
           </TableComponent>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, flexWrap: 'wrap', gap: 2 }}>
-            <Typography variant="body2">
-              Showing {startItem}-{endItem} of {totalItems} trades
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Page Size</InputLabel>
-                <Select
-                  value={pageSize}
-                  label="Page Size"
-                  onChange={handlePageSizeChange}
-                >
-                  <MenuItem value={10}>10</MenuItem>
-                  <MenuItem value={20}>20</MenuItem>
-                  <MenuItem value={50}>50</MenuItem>
-                  <MenuItem value={100}>100</MenuItem>
-                </Select>
-              </FormControl>
-              <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={handlePageChange}
-                color="primary"
-                disabled={loading}
-              />
-            </Box>
-          </Box>
+          <PaginationControls
+            totalItems={totalItems}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            loading={loading}
+            itemLabel="trades"
+          />
         </>
       )}
     </Container>

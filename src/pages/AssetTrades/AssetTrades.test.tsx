@@ -224,13 +224,14 @@ describe('AssetTrades', () => {
     });
   });
 
-  it('redirects to login when not authenticated', () => {
+  it('does not redirect when not authenticated (handled by ProtectedRoute)', () => {
     vi.mocked(authService.getToken).mockReturnValue(null);
     vi.mocked(authService.getUsername).mockReturnValue(null);
 
     renderAssetTrades();
 
-    expect(mockNavigate).toHaveBeenCalledWith('/login');
+    // Component no longer redirects - ProtectedRoute handles authentication
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('displays action column header', async () => {

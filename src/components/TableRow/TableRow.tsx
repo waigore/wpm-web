@@ -11,6 +11,7 @@ import {
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { Position } from '../../api/client';
 import { formatCurrency, formatQuantity } from '../../utils/formatters';
+import { getGainLossColor } from '../../utils/colorHelpers';
 
 export interface TableRowProps extends Omit<MuiTableRowProps, 'children'> {
   position: Position;
@@ -20,13 +21,6 @@ export const TableRow: React.FC<TableRowProps> = ({ position, ...props }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
-  const getGainLossColor = (value: number | null | undefined): string => {
-    if (value === null || value === undefined) return 'inherit';
-    if (value > 0) return 'success.main';
-    if (value < 0) return 'error.main';
-    return 'inherit';
-  };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();

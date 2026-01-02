@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getAllPositions, PortfolioParams } from '../api/services/portfolioService';
 import type { Position } from '../api/client';
 import { useAuth } from './useAuth';
+import { extractErrorMessage } from '../utils/errorHelpers';
 
 export interface UsePortfolioReturn {
   positions: Position[];
@@ -53,23 +54,8 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
       setTotalMarketValue(response.total_market_value ?? null);
       setTotalUnrealizedGainLoss(response.total_unrealized_gain_loss ?? null);
       setTotalCostBasis(response.total_cost_basis || 0);
-    } catch (err: any) {
-      let errorMessage = 'Failed to fetch portfolio positions';
-      
-      if (err?.response?.status === 401) {
-        errorMessage = 'Authentication failed. Please login again.';
-      } else if (err?.response?.status === 400) {
-        errorMessage = 'Invalid sort field. Please try again.';
-      } else if (err?.response?.status === 422) {
-        errorMessage = 'Validation error. Please check your parameters.';
-      } else if (err?.response?.status === 500) {
-        errorMessage = 'Unable to load portfolio data. Please try again.';
-      } else if (err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK') {
-        errorMessage = 'Network error. Please check your connection.';
-      } else if (err?.message) {
-        errorMessage = err.message;
-      }
-      
+    } catch (err: unknown) {
+      const errorMessage = extractErrorMessage(err, 'Failed to fetch portfolio positions');
       setError(errorMessage);
       setPositions([]);
       setTotalMarketValue(null);

@@ -99,7 +99,7 @@ describe('useAssetTrades', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.error).toContain('Asset not found');
+    expect(result.current.error).toContain('Resource not found');
   });
 
   it('should handle 401 error', async () => {

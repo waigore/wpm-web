@@ -6,6 +6,7 @@ import { Button } from '../../components/Button/Button';
 import { login } from '../../api/services/authService';
 import { validateLoginForm } from '../../utils/validators';
 import { useAuth } from '../../hooks/useAuth';
+import { extractErrorMessage } from '../../utils/errorHelpers';
 import logger from '../../utils/logger';
 
 export const Login: React.FC = () => {
@@ -44,19 +45,8 @@ export const Login: React.FC = () => {
       } else {
         throw new Error('No access token received');
       }
-    } catch (err: any) {
-      let errorMessage = 'An error occurred. Please try again.';
-      
-      if (err?.response?.status === 401) {
-        errorMessage = 'Invalid username or password';
-      } else if (err?.response?.status === 422) {
-        errorMessage = 'Validation error. Please check your input.';
-      } else if (err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK') {
-        errorMessage = 'Network error. Please try again.';
-      } else if (err?.message) {
-        errorMessage = err.message;
-      }
-
+    } catch (err: unknown) {
+      const errorMessage = extractErrorMessage(err, 'An error occurred. Please try again.');
       setError(errorMessage);
       logger.error(`Login failed: ${errorMessage}`, { context: 'Login', error: err });
     } finally {

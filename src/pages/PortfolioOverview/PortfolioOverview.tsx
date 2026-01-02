@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -8,11 +7,6 @@ import {
   TableBody,
   TableRow as MuiTableRow,
   TableCell as MuiTableCell,
-  Pagination,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   CircularProgress,
   Paper,
 } from '@mui/material';
@@ -20,29 +14,20 @@ import { Table as TableComponent } from '../../components/Table/Table';
 import { TableHeader } from '../../components/TableHeader/TableHeader';
 import { TableRow } from '../../components/TableRow/TableRow';
 import { ErrorMessage } from '../../components/ErrorMessage/ErrorMessage';
+import { PaginationControls } from '../../components/PaginationControls/PaginationControls';
 import { useAuth } from '../../hooks/useAuth';
 import { usePortfolio } from '../../hooks/usePortfolio';
+import { useTableSort } from '../../hooks/useTableSort';
 import { formatCurrency } from '../../utils/formatters';
 import logger from '../../utils/logger';
 
 type SortByField = 'ticker' | 'asset_type' | 'quantity' | 'average_price' | 'cost_basis' | 'current_price' | 'market_value' | 'unrealized_gain_loss';
-type SortOrder = 'asc' | 'desc';
 
 export const PortfolioOverview: React.FC = () => {
-  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [sortBy, setSortBy] = useState<SortByField>('ticker');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const { sortBy, sortOrder, handleSort: handleSortChange, getSortDirection } = useTableSort<SortByField>('ticker');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      logger.info('Redirecting to login - not authenticated', { context: 'PortfolioOverview' });
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -69,11 +54,9 @@ export const PortfolioOverview: React.FC = () => {
   });
 
   const handleSort = (column: SortByField) => {
-    const newSortOrder: SortOrder =
-      sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
-    setSortBy(column);
-    setSortOrder(newSortOrder);
+    handleSortChange(column);
     setCurrentPage(1); // Reset to first page on sort
+    const newSortOrder = sortBy === column && sortOrder === 'asc' ? 'desc' : 'asc';
     logger.info(`Sorting by ${column} ${newSortOrder}`, { context: 'PortfolioOverview' });
   };
 
@@ -82,8 +65,7 @@ export const PortfolioOverview: React.FC = () => {
     logger.info(`Navigated to page ${page}`, { context: 'PortfolioOverview' });
   };
 
-  const handlePageSizeChange = (event: any) => {
-    const newSize = event.target.value as number;
+  const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
     setCurrentPage(1); // Reset to first page on size change
     logger.info(`Page size changed to ${newSize}`, { context: 'PortfolioOverview' });
@@ -105,17 +87,6 @@ export const PortfolioOverview: React.FC = () => {
       });
     }
   });
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  const getSortDirection = (column: SortByField): 'asc' | 'desc' | false => {
-    if (sortBy === column) {
-      return sortOrder;
-    }
-    return false;
-  };
 
   const startItem = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0;
   const endItem = Math.min(currentPage * pageSize, totalItems);
@@ -284,33 +255,16 @@ export const PortfolioOverview: React.FC = () => {
             </TableBody>
           </TableComponent>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, flexWrap: 'wrap', gap: 2 }}>
-            <Typography variant="body2">
-              Showing {startItem}-{endItem} of {totalItems} positions
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Page Size</InputLabel>
-                <Select
-                  value={pageSize}
-                  label="Page Size"
-                  onChange={handlePageSizeChange}
-                >
-                  <MenuItem value={10}>10</MenuItem>
-                  <MenuItem value={20}>20</MenuItem>
-                  <MenuItem value={50}>50</MenuItem>
-                  <MenuItem value={100}>100</MenuItem>
-                </Select>
-              </FormControl>
-              <Pagination
-                count={totalPages}
-                page={currentPage}
-                onChange={handlePageChange}
-                color="primary"
-                disabled={loading}
-              />
-            </Box>
-          </Box>
+          <PaginationControls
+            totalItems={totalItems}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            loading={loading}
+            itemLabel="positions"
+          />
         </>
       )}
     </Container>
