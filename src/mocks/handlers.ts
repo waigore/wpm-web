@@ -124,7 +124,7 @@ export const handlers = [
   }),
 
   // Asset trades endpoint - MSW will match requests to any origin with this path
-  http.get('*/portfolio/asset/:ticker', async ({ request, params }) => {
+  http.get('*/portfolio/trades/:ticker', async ({ request, params }) => {
     // Check for authorization header
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -165,9 +165,7 @@ export const handlers = [
       'order_instruction',
       'quantity',
       'price',
-      'cost_basis',
-      'market_price',
-      'unrealized_profit_loss',
+      'broker',
     ];
     if (!validSortFields.includes(sortBy)) {
       return HttpResponse.json(

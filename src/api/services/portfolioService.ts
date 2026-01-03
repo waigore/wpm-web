@@ -66,7 +66,7 @@ export async function getAssetTrades(
   const startDate = params?.start_date ?? null;
   const endDate = params?.end_date ?? null;
 
-  return DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet(
+  return DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet(
     ticker,
     page,
     size,

@@ -36,12 +36,10 @@ AssetTrades
 │               │           ├── Ticker (sortable)
 │               │           ├── Asset Type (sortable)
 │               │           ├── Action (sortable)
+│               │           ├── Broker (sortable)
 │               │           ├── Order Instruction (sortable)
 │               │           ├── Quantity (sortable)
-│               │           ├── Price (sortable)
-│               │           ├── Cost Basis (sortable)
-│               │           ├── Market Price (sortable)
-│               │           └── Unrealized P/L (sortable)
+│               │           └── Price (sortable)
 │               └── MUI TableBody
 │                   └── MUI TableRow[] (for each trade in current page)
 │                       └── MUI TableCell[] (trade data)
@@ -129,7 +127,7 @@ AssetTrades
 - **Query Parameters**:
   - `page` (optional, integer, default: 1, minimum: 1): Page number (1-indexed)
   - `size` (optional, integer, default: 20, minimum: 1, maximum: 100): Number of items per page
-  - `sort_by` (optional, string, default: "date"): Field to sort by (e.g., "date", "ticker", "asset_type", "action", "order_instruction", "quantity", "price", "cost_basis", "market_price", "unrealized_profit_loss")
+  - `sort_by` (optional, string, default: "date"): Field to sort by (e.g., "date", "ticker", "asset_type", "action", "order_instruction", "quantity", "price", "broker")
   - `sort_order` (optional, string, default: "asc", pattern: "^(asc|desc)$"): Sort order
   - `start_date` (optional, string, ISO format YYYY-MM-DD): Start date for filtering trades (inclusive)
   - `end_date` (optional, string, ISO format YYYY-MM-DD): End date for filtering trades (inclusive)
@@ -198,7 +196,6 @@ AssetTrades
 ### Data Validations
 - Validate API response structure
 - Validate each trade has required fields
-- Handle null/undefined values gracefully (e.g., `cost_basis`, `market_price`, `unrealized_profit_loss` may be null for sell trades)
 - Validate ticker from URL params is not empty
 
 ### Display Validations
@@ -213,12 +210,10 @@ AssetTrades
 2. **Ticker**: Field name "ticker" - Alphabetical sort (A-Z or Z-A)
 3. **Asset Type**: Field name "asset_type" - Alphabetical sort
 4. **Action**: Field name "action" - Alphabetical sort (Buy/Sell)
-5. **Order Instruction**: Field name "order_instruction" - Alphabetical sort (buy/sell)
+5. **Order Instruction**: Field name "order_instruction" - Alphabetical sort
 6. **Quantity**: Field name "quantity" - Numerical sort
 7. **Price**: Field name "price" - Numerical sort
-8. **Cost Basis**: Field name "cost_basis" - Numerical sort (null handling handled by server)
-9. **Market Price**: Field name "market_price" - Numerical sort (null handling handled by server)
-10. **Unrealized P/L**: Field name "unrealized_profit_loss" - Numerical sort (null handling handled by server)
+8. **Broker**: Field name "broker" - Alphabetical sort
 
 ### Sort Behavior
 - **Server-side sorting**: All sorting performed by backend API
@@ -259,19 +254,16 @@ AssetTrades
 ## Data Formatting
 
 ### Display Format
-- **Currency values** (price, cost_basis, market_price, unrealized_profit_loss): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
+- **Currency values** (price): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
 - **Date**: Format ISO date string (YYYY-MM-DD) to display format (e.g., "Jan 15, 2024" or "2024-01-15")
 - **Quantity**: Display in full precision as returned from the API (arbitrary precision). The quantity should display exactly as returned from the API without decimal place constraints (e.g., "100", "0.5", "0.123456789").
 - **Action**: Display as-is from API ("Buy" or "Sell")
-- **Order Instruction**: Display as capitalized text ("Buy" or "Sell")
-- **Null values**: Display as "N/A" or "-" (applies to cost_basis, market_price, unrealized_profit_loss which may be null for sell trades)
+- **Order Instruction**: Display as capitalized text (e.g., "Limit", "Market", "Lump Sum")
+- **Broker**: Display as-is from API (broker name string)
 
 ### Styling
-- Positive unrealized profit/loss: Green text/color (MUI success color)
-- Negative unrealized profit/loss: Red text/color (MUI error color)
-- Zero or null: Default text color
 - Action (Buy/Sell): Can be color-coded or styled for visual distinction
-- Order instruction (buy/sell): Can be color-coded or styled for visual distinction
+- Order instruction: Can be color-coded or styled for visual distinction
 
 ## Accessibility
 
@@ -341,7 +333,6 @@ AssetTrades
 - Responsive: MUI TableContainer provides horizontal scroll on small screens
 - Loading state: MUI `CircularProgress` centered using MUI `Box` with flexbox centering
 - Error messages use MUI `Alert` with severity="error" and action prop for retry button
-- Profit/loss colors use MUI `Typography` with color prop or sx styling (success/error colors)
 - Pagination uses MUI `Pagination` component with proper theming
 - Page size selector uses MUI `Select` with `FormControl` and `InputLabel`
 - Page info uses MUI `Typography` with variant="body2" or "caption"

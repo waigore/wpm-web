@@ -8,7 +8,7 @@ import * as authService from './authService';
 vi.mock('../client/services/DefaultService', () => ({
   DefaultService: {
     getAllPositionsEndpointPortfolioAllGet: vi.fn(),
-    getAssetTradesEndpointPortfolioAssetTickerGet: vi.fn(),
+    getAssetTradesEndpointPortfolioTradesTickerGet: vi.fn(),
   },
 }));
 
@@ -166,13 +166,13 @@ describe('portfolioService', () => {
       };
 
       vi.mocked(authService.getToken).mockReturnValue('mock-token');
-      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).mockResolvedValue(mockResponse);
+      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet).mockResolvedValue(mockResponse);
 
       const result = await getAssetTrades('AAPL');
 
       expect(result).toEqual(mockResponse);
       expect(result.trades).toBeDefined();
-      expect(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).toHaveBeenCalledWith(
+      expect(DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet).toHaveBeenCalledWith(
         'AAPL',
         1,
         20,
@@ -196,7 +196,7 @@ describe('portfolioService', () => {
       };
 
       vi.mocked(authService.getToken).mockReturnValue('mock-token');
-      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).mockResolvedValue(mockResponse);
+      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet).mockResolvedValue(mockResponse);
 
       const result = await getAssetTrades('GOOGL', {
         page: 2,
@@ -208,7 +208,7 @@ describe('portfolioService', () => {
       });
 
       expect(result).toEqual(mockResponse);
-      expect(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).toHaveBeenCalledWith(
+      expect(DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet).toHaveBeenCalledWith(
         'GOOGL',
         2,
         50,
@@ -231,14 +231,14 @@ describe('portfolioService', () => {
       };
 
       vi.mocked(authService.getToken).mockReturnValue('mock-token');
-      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).mockResolvedValue(mockResponse);
+      vi.mocked(DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet).mockResolvedValue(mockResponse);
 
       await getAssetTrades('MSFT', {
         page: undefined,
         size: undefined,
       });
 
-      expect(DefaultService.getAssetTradesEndpointPortfolioAssetTickerGet).toHaveBeenCalledWith(
+      expect(DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet).toHaveBeenCalledWith(
         'MSFT',
         1,
         20,

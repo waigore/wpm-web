@@ -22,7 +22,7 @@ import { useAssetTrades } from '../../hooks/useAssetTrades';
 import { useTableSort } from '../../hooks/useTableSort';
 import logger from '../../utils/logger';
 
-type SortByField = 'date' | 'ticker' | 'asset_type' | 'action' | 'order_instruction' | 'quantity' | 'price' | 'cost_basis' | 'market_price' | 'unrealized_profit_loss';
+type SortByField = 'date' | 'ticker' | 'asset_type' | 'action' | 'order_instruction' | 'quantity' | 'price' | 'broker';
 
 export const AssetTrades: React.FC = () => {
   const { ticker } = useParams<{ ticker: string }>();
@@ -158,6 +158,15 @@ export const AssetTrades: React.FC = () => {
                 </TableHeader>
                 <TableHeader
                   sortable
+                  active={sortBy === 'broker'}
+                  sortDirection={getSortDirection('broker')}
+                  onSort={() => handleSort('broker')}
+                  aria-sort={sortBy === 'broker' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Broker
+                </TableHeader>
+                <TableHeader
+                  sortable
                   active={sortBy === 'order_instruction'}
                   sortDirection={getSortDirection('order_instruction')}
                   onSort={() => handleSort('order_instruction')}
@@ -185,42 +194,12 @@ export const AssetTrades: React.FC = () => {
                 >
                   Price
                 </TableHeader>
-                <TableHeader
-                  sortable
-                  active={sortBy === 'cost_basis'}
-                  sortDirection={getSortDirection('cost_basis')}
-                  onSort={() => handleSort('cost_basis')}
-                  align="right"
-                  aria-sort={sortBy === 'cost_basis' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
-                >
-                  Cost Basis
-                </TableHeader>
-                <TableHeader
-                  sortable
-                  active={sortBy === 'market_price'}
-                  sortDirection={getSortDirection('market_price')}
-                  onSort={() => handleSort('market_price')}
-                  align="right"
-                  aria-sort={sortBy === 'market_price' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
-                >
-                  Market Price
-                </TableHeader>
-                <TableHeader
-                  sortable
-                  active={sortBy === 'unrealized_profit_loss'}
-                  sortDirection={getSortDirection('unrealized_profit_loss')}
-                  onSort={() => handleSort('unrealized_profit_loss')}
-                  align="right"
-                  aria-sort={sortBy === 'unrealized_profit_loss' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
-                >
-                  Unrealized P/L
-                </TableHeader>
               </MuiTableRow>
             </TableHead>
             <TableBody>
               {trades.length === 0 ? (
                 <MuiTableRow>
-                  <MuiTableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                  <MuiTableCell colSpan={8} align="center" sx={{ py: 4 }}>
                     No trades found for this asset
                   </MuiTableCell>
                 </MuiTableRow>

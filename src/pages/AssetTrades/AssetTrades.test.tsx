@@ -47,9 +47,7 @@ const mockTrades = [
     order_instruction: 'limit',
     quantity: 50.0,
     price: 150.50,
-    cost_basis: 7525.0,
-    market_price: 175.25,
-    unrealized_profit_loss: 1237.5,
+    broker: 'Fidelity',
   },
   {
     date: '2024-02-10',
@@ -59,9 +57,7 @@ const mockTrades = [
     order_instruction: 'market',
     quantity: 30.0,
     price: 160.0,
-    cost_basis: 4800.0,
-    market_price: 175.25,
-    unrealized_profit_loss: 457.5,
+    broker: 'Charles Schwab',
   },
 ];
 
@@ -301,6 +297,43 @@ describe('AssetTrades', () => {
       // Should find multiple "Buy" texts (one in Action column, one in Order Instruction column)
       const buyElements = screen.getAllByText('Buy');
       expect(buyElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('displays broker column header', async () => {
+    vi.mocked(portfolioService.getAssetTrades).mockResolvedValue({
+      trades: {
+        items: mockTrades,
+        total: 2,
+        page: 1,
+        size: 20,
+        pages: 1,
+      },
+    });
+
+    renderAssetTrades();
+
+    await waitFor(() => {
+      expect(screen.getByText(/broker/i)).toBeInTheDocument();
+    });
+  });
+
+  it('displays broker data in trade rows', async () => {
+    vi.mocked(portfolioService.getAssetTrades).mockResolvedValue({
+      trades: {
+        items: mockTrades,
+        total: 2,
+        page: 1,
+        size: 20,
+        pages: 1,
+      },
+    });
+
+    renderAssetTrades();
+
+    await waitFor(() => {
+      expect(screen.getByText('Fidelity')).toBeInTheDocument();
+      expect(screen.getByText('Charles Schwab')).toBeInTheDocument();
     });
   });
 

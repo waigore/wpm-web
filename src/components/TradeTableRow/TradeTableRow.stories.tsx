@@ -20,9 +20,7 @@ const mockTrade = {
   order_instruction: 'limit',
   quantity: 50.0,
   price: 150.50,
-  cost_basis: 7525.0,
-  market_price: 175.25,
-  unrealized_profit_loss: 1237.5,
+  broker: 'Fidelity',
 };
 
 export const Default: Story = {
@@ -34,12 +32,10 @@ export const Default: Story = {
           <TableCell>Ticker</TableCell>
           <TableCell>Asset Type</TableCell>
           <TableCell>Action</TableCell>
+          <TableCell>Broker</TableCell>
           <TableCell>Order Instruction</TableCell>
           <TableCell align="right">Quantity</TableCell>
           <TableCell align="right">Price</TableCell>
-          <TableCell align="right">Cost Basis</TableCell>
-          <TableCell align="right">Market Price</TableCell>
-          <TableCell align="right">Unrealized P/L</TableCell>
         </MuiTableRow>
       </TableHead>
       <TableBody>
@@ -58,12 +54,10 @@ export const BuyTrade: Story = {
           <TableCell>Ticker</TableCell>
           <TableCell>Asset Type</TableCell>
           <TableCell>Action</TableCell>
+          <TableCell>Broker</TableCell>
           <TableCell>Order Instruction</TableCell>
           <TableCell align="right">Quantity</TableCell>
           <TableCell align="right">Price</TableCell>
-          <TableCell align="right">Cost Basis</TableCell>
-          <TableCell align="right">Market Price</TableCell>
-          <TableCell align="right">Unrealized P/L</TableCell>
         </MuiTableRow>
       </TableHead>
       <TableBody>
@@ -79,9 +73,6 @@ export const SellTrade: Story = {
       ...mockTrade,
       action: 'Sell',
       order_instruction: 'market',
-      cost_basis: null,
-      market_price: null,
-      unrealized_profit_loss: null,
     };
     return (
       <TableComponent>
@@ -91,12 +82,10 @@ export const SellTrade: Story = {
             <TableCell>Ticker</TableCell>
             <TableCell>Asset Type</TableCell>
             <TableCell>Action</TableCell>
+            <TableCell>Broker</TableCell>
             <TableCell>Order Instruction</TableCell>
             <TableCell align="right">Quantity</TableCell>
             <TableCell align="right">Price</TableCell>
-            <TableCell align="right">Cost Basis</TableCell>
-            <TableCell align="right">Market Price</TableCell>
-            <TableCell align="right">Unrealized P/L</TableCell>
           </MuiTableRow>
         </TableHead>
         <TableBody>
@@ -116,9 +105,7 @@ export const MultipleTrades: Story = {
         date: '2024-02-10',
         quantity: 30.0,
         price: 160.0,
-        cost_basis: 4800.0,
-        market_price: 175.25,
-        unrealized_profit_loss: 457.5,
+        broker: 'Charles Schwab',
       },
       {
         ...mockTrade,
@@ -127,9 +114,7 @@ export const MultipleTrades: Story = {
         order_instruction: 'limit',
         quantity: 10.0,
         price: 170.0,
-        cost_basis: null,
-        market_price: null,
-        unrealized_profit_loss: null,
+        broker: 'TD Ameritrade',
       },
     ];
 
@@ -141,12 +126,10 @@ export const MultipleTrades: Story = {
             <TableCell>Ticker</TableCell>
             <TableCell>Asset Type</TableCell>
             <TableCell>Action</TableCell>
+            <TableCell>Broker</TableCell>
             <TableCell>Order Instruction</TableCell>
             <TableCell align="right">Quantity</TableCell>
             <TableCell align="right">Price</TableCell>
-            <TableCell align="right">Cost Basis</TableCell>
-            <TableCell align="right">Market Price</TableCell>
-            <TableCell align="right">Unrealized P/L</TableCell>
           </MuiTableRow>
         </TableHead>
         <TableBody>

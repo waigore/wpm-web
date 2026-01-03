@@ -2,7 +2,7 @@ import React from 'react';
 import { TableRow as MuiTableRow, TableCell, TableRowProps as MuiTableRowProps } from '@mui/material';
 import type { Trade } from '../../api/client';
 import { formatCurrency, formatQuantity, formatDate } from '../../utils/formatters';
-import { getGainLossColor, getActionColor } from '../../utils/colorHelpers';
+import { getActionColor } from '../../utils/colorHelpers';
 
 export interface TradeTableRowProps extends Omit<MuiTableRowProps, 'children'> {
   trade: Trade;
@@ -30,22 +30,12 @@ export const TradeTableRow: React.FC<TradeTableRowProps> = ({ trade, ...props })
       >
         {trade.action}
       </TableCell>
+      <TableCell>{trade.broker}</TableCell>
       <TableCell>
         {capitalizeFirst(trade.order_instruction)}
       </TableCell>
       <TableCell align="right">{formatQuantity(trade.quantity)}</TableCell>
       <TableCell align="right">{formatCurrency(trade.price)}</TableCell>
-      <TableCell align="right">{formatCurrency(trade.cost_basis)}</TableCell>
-      <TableCell align="right">{formatCurrency(trade.market_price)}</TableCell>
-      <TableCell
-        align="right"
-        sx={{
-          color: getGainLossColor(trade.unrealized_profit_loss),
-          fontWeight: 'medium',
-        }}
-      >
-        {formatCurrency(trade.unrealized_profit_loss)}
-      </TableCell>
     </MuiTableRow>
   );
 };
