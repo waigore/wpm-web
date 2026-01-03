@@ -105,6 +105,38 @@ describe('AssetTrades', () => {
     }, { timeout: 3000 });
   });
 
+  it('renders breadcrumbs with correct items including ticker', async () => {
+    vi.mocked(portfolioService.getAssetTrades).mockResolvedValue({
+      trades: {
+        items: [],
+        total: 0,
+        page: 1,
+        size: 20,
+        pages: 0,
+      },
+    });
+
+    renderAssetTrades('AAPL');
+
+    await waitFor(() => {
+      expect(screen.getByText('Home')).toBeInTheDocument();
+      expect(screen.getByText('Portfolio')).toBeInTheDocument();
+      expect(screen.getByText('AAPL')).toBeInTheDocument();
+    });
+
+    const homeLink = screen.getByText('Home').closest('a');
+    const portfolioLink = screen.getByText('Portfolio').closest('a');
+    
+    expect(homeLink).toBeInTheDocument();
+    expect(homeLink).toHaveAttribute('href', '/portfolio');
+    expect(portfolioLink).toBeInTheDocument();
+    expect(portfolioLink).toHaveAttribute('href', '/portfolio');
+    
+    // Last item (ticker) should not be a link
+    const tickerElement = screen.getByText('AAPL');
+    expect(tickerElement.closest('a')).not.toBeInTheDocument();
+  });
+
   it('displays trades when data is loaded', async () => {
     vi.mocked(portfolioService.getAssetTrades).mockResolvedValue({
       trades: {

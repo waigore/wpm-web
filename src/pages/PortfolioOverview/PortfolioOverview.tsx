@@ -15,6 +15,7 @@ import { TableHeader } from '../../components/TableHeader/TableHeader';
 import { TableRow } from '../../components/TableRow/TableRow';
 import { ErrorMessage } from '../../components/ErrorMessage/ErrorMessage';
 import { PaginationControls } from '../../components/PaginationControls/PaginationControls';
+import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 import { usePortfolio } from '../../hooks/usePortfolio';
 import { useTableSort } from '../../hooks/useTableSort';
@@ -93,6 +94,8 @@ export const PortfolioOverview: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Breadcrumbs items={[{ label: 'Home', path: '/portfolio' }, { label: 'Portfolio' }]} />
+      <Box sx={{ mb: 2 }} />
       <Typography variant="h4" component="h1" gutterBottom>
         Portfolio Overview
       </Typography>

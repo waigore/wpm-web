@@ -99,6 +99,32 @@ describe('PortfolioOverview', () => {
     });
   });
 
+  it('renders breadcrumbs with correct items', async () => {
+    vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+      positions: {
+        items: [],
+        total: 0,
+        page: 1,
+        size: 50,
+        pages: 0,
+      },
+      total_market_value: null,
+      total_cost_basis: 0,
+      total_unrealized_gain_loss: null,
+    });
+
+    renderPortfolioOverview();
+
+    await waitFor(() => {
+      expect(screen.getByText('Home')).toBeInTheDocument();
+      expect(screen.getByText('Portfolio')).toBeInTheDocument();
+    });
+
+    const homeLink = screen.getByText('Home').closest('a');
+    expect(homeLink).toBeInTheDocument();
+    expect(homeLink).toHaveAttribute('href', '/portfolio');
+  });
+
   it('displays positions in table', async () => {
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
       positions: {

@@ -16,6 +16,7 @@ import { TableHeader } from '../../components/TableHeader/TableHeader';
 import { TradeTableRow } from '../../components/TradeTableRow/TradeTableRow';
 import { ErrorMessage } from '../../components/ErrorMessage/ErrorMessage';
 import { PaginationControls } from '../../components/PaginationControls/PaginationControls';
+import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 import { useAssetTrades } from '../../hooks/useAssetTrades';
 import { useTableSort } from '../../hooks/useTableSort';
@@ -96,6 +97,8 @@ export const AssetTrades: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Breadcrumbs items={[{ label: 'Home', path: '/portfolio' }, { label: 'Portfolio', path: '/portfolio' }, { label: ticker }]} />
+      <Box sx={{ mb: 2 }} />
       <Typography variant="h4" component="h1" gutterBottom>
         {ticker}: Trades
       </Typography>
