@@ -268,9 +268,13 @@ export const handlers = [
       'date',
       'ticker',
       'asset_type',
+      'broker',
       'original_quantity',
       'remaining_quantity',
       'cost_basis',
+      'realized_pnl',
+      'unrealized_pnl',
+      'total_pnl',
     ];
     if (!validSortFields.includes(sortBy)) {
       return HttpResponse.json(

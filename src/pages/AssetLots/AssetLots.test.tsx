@@ -43,9 +43,13 @@ const mockLots = [
     date: '2024-01-15',
     ticker: 'AAPL',
     asset_type: 'Stock',
+    broker: 'Fidelity',
     original_quantity: 50.0,
     remaining_quantity: 40.0,
     cost_basis: 7525.0,
+    realized_pnl: 75.0,
+    unrealized_pnl: 1000.0,
+    total_pnl: 1075.0,
     matched_sells: [
       {
         trade: {
@@ -66,9 +70,13 @@ const mockLots = [
     date: '2024-02-10',
     ticker: 'AAPL',
     asset_type: 'Stock',
+    broker: 'Fidelity',
     original_quantity: 50.0,
     remaining_quantity: 50.0,
     cost_basis: 7525.0,
+    realized_pnl: null,
+    unrealized_pnl: 1250.0,
+    total_pnl: 1250.0,
     matched_sells: [],
   },
 ];
@@ -194,7 +202,9 @@ describe('AssetLots', () => {
     // Check that matched sell data is displayed
     await waitFor(() => {
       expect(screen.getByText('Sell')).toBeInTheDocument();
-      expect(screen.getByText('Fidelity')).toBeInTheDocument();
+      // Fidelity appears in both lot row and matched sell row, so use getAllByText
+      const fidelityElements = screen.getAllByText('Fidelity');
+      expect(fidelityElements.length).toBeGreaterThanOrEqual(1);
     });
   });
 

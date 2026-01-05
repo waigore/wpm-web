@@ -21,7 +21,7 @@ import { useAssetLots } from '../../hooks/useAssetLots';
 import { useTableSort } from '../../hooks/useTableSort';
 import logger from '../../utils/logger';
 
-type SortByField = 'date' | 'ticker' | 'asset_type' | 'original_quantity' | 'remaining_quantity' | 'cost_basis';
+type SortByField = 'date' | 'ticker' | 'asset_type' | 'broker' | 'original_quantity' | 'remaining_quantity' | 'cost_basis' | 'realized_pnl' | 'unrealized_pnl' | 'total_pnl';
 
 export const AssetLots: React.FC = () => {
   const { ticker } = useParams<{ ticker: string }>();
@@ -148,6 +148,15 @@ export const AssetLots: React.FC = () => {
                 </TableHeader>
                 <TableHeader
                   sortable
+                  active={sortBy === 'broker'}
+                  sortDirection={getSortDirection('broker')}
+                  onSort={() => handleSort('broker')}
+                  aria-sort={sortBy === 'broker' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Broker
+                </TableHeader>
+                <TableHeader
+                  sortable
                   active={sortBy === 'original_quantity'}
                   sortDirection={getSortDirection('original_quantity')}
                   onSort={() => handleSort('original_quantity')}
@@ -176,12 +185,42 @@ export const AssetLots: React.FC = () => {
                 >
                   Cost Basis
                 </TableHeader>
+                <TableHeader
+                  sortable
+                  active={sortBy === 'realized_pnl'}
+                  sortDirection={getSortDirection('realized_pnl')}
+                  onSort={() => handleSort('realized_pnl')}
+                  align="right"
+                  aria-sort={sortBy === 'realized_pnl' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Realized P/L
+                </TableHeader>
+                <TableHeader
+                  sortable
+                  active={sortBy === 'unrealized_pnl'}
+                  sortDirection={getSortDirection('unrealized_pnl')}
+                  onSort={() => handleSort('unrealized_pnl')}
+                  align="right"
+                  aria-sort={sortBy === 'unrealized_pnl' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Unrealized P/L
+                </TableHeader>
+                <TableHeader
+                  sortable
+                  active={sortBy === 'total_pnl'}
+                  sortDirection={getSortDirection('total_pnl')}
+                  onSort={() => handleSort('total_pnl')}
+                  align="right"
+                  aria-sort={sortBy === 'total_pnl' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Total P/L
+                </TableHeader>
               </MuiTableRow>
             </TableHead>
             <TableBody>
               {lots.length === 0 ? (
                 <MuiTableRow>
-                  <MuiTableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <MuiTableCell colSpan={10} align="center" sx={{ py: 4 }}>
                     No lots found for this asset
                   </MuiTableCell>
                 </MuiTableRow>

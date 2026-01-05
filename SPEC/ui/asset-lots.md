@@ -36,9 +36,13 @@ AssetLots
 │               │           ├── Date (sortable, default)
 │               │           ├── Ticker (sortable)
 │               │           ├── Asset Type (sortable)
+│               │           ├── Broker (sortable)
 │               │           ├── Original Quantity (sortable)
 │               │           ├── Remaining Quantity (sortable)
-│               │           └── Cost Basis (sortable)
+│               │           ├── Cost Basis (sortable)
+│               │           ├── Realized P/L (sortable)
+│               │           ├── Unrealized P/L (sortable)
+│               │           └── Total P/L (sortable)
 │               └── MUI TableBody
 │                   └── MUI TableRow[] (for each lot in current page)
 │                       ├── LotTableRow (lot data)
@@ -128,7 +132,7 @@ AssetLots
 - **Query Parameters**:
   - `page` (optional, integer, default: 1, minimum: 1): Page number (1-indexed)
   - `size` (optional, integer, default: 20, minimum: 1, maximum: 100): Number of items per page
-  - `sort_by` (optional, string, default: "date"): Field to sort by (e.g., "date", "ticker", "asset_type", "original_quantity", "remaining_quantity", "cost_basis")
+  - `sort_by` (optional, string, default: "date"): Field to sort by (e.g., "date", "ticker", "asset_type", "broker", "original_quantity", "remaining_quantity", "cost_basis", "realized_pnl", "unrealized_pnl", "total_pnl")
   - `sort_order` (optional, string, default: "asc", pattern: "^(asc|desc)$"): Sort order
   - `start_date` (optional, string, ISO format YYYY-MM-DD): Start date for filtering lots (inclusive)
   - `end_date` (optional, string, ISO format YYYY-MM-DD): End date for filtering lots (inclusive)
@@ -150,9 +154,13 @@ AssetLots
     date: string,
     ticker: string,
     asset_type: string,
+    broker: string,
     original_quantity: number,
     remaining_quantity: number,
     cost_basis: number,
+    realized_pnl: number | null,
+    unrealized_pnl: number | null,
+    total_pnl: number | null,
     matched_sells: MatchedSell[]  // Array of matched sells (may be empty)
   }
   ```
@@ -231,9 +239,13 @@ AssetLots
 1. **Date**: Field name "date" - Date sort (chronological order, default: ascending)
 2. **Ticker**: Field name "ticker" - Alphabetical sort (A-Z or Z-A)
 3. **Asset Type**: Field name "asset_type" - Alphabetical sort
-4. **Original Quantity**: Field name "original_quantity" - Numerical sort
-5. **Remaining Quantity**: Field name "remaining_quantity" - Numerical sort
-6. **Cost Basis**: Field name "cost_basis" - Numerical sort
+4. **Broker**: Field name "broker" - Alphabetical sort
+5. **Original Quantity**: Field name "original_quantity" - Numerical sort
+6. **Remaining Quantity**: Field name "remaining_quantity" - Numerical sort
+7. **Cost Basis**: Field name "cost_basis" - Numerical sort
+8. **Realized P/L**: Field name "realized_pnl" - Numerical sort
+9. **Unrealized P/L**: Field name "unrealized_pnl" - Numerical sort
+10. **Total P/L**: Field name "total_pnl" - Numerical sort
 
 ### Sort Behavior
 - **Server-side sorting**: All sorting performed by backend API
@@ -256,13 +268,19 @@ AssetLots
 - Sub-rows span all table columns but display matched sell information
 
 ### Matched Sell Data Display
-Each matched sell sub-row displays:
-- **Date**: From `matched_sell.trade.date` (formatted using `formatDate`)
-- **Action**: Always "Sell" (from `matched_sell.trade.action`)
-- **Quantity**: Consumed quantity from `matched_sell.consumed_quantity` (formatted using `formatQuantity`)
-- **Price**: From `matched_sell.trade.price` (formatted using `formatCurrency`)
-- **Broker**: From `matched_sell.trade.broker`
-- **Other columns**: Empty or show visual indicator (e.g., "—" or empty cell)
+Each matched sell sub-row displays data aligned with the table columns:
+- **Date** (column 1): From `matched_sell.trade.date` (formatted using `formatDate`)
+- **Action** (column 2, in "Ticker" position): Always "Sell" (from `matched_sell.trade.action`, styled with action color)
+- **Asset Type** (column 3): Empty, displays "—"
+- **Broker** (column 4): From `matched_sell.trade.broker`
+- **Original Quantity** (column 5): Consumed quantity from `matched_sell.consumed_quantity` (formatted using `formatQuantity`)
+- **Remaining Quantity** (column 6): Empty, displays "—"
+- **Cost Basis** (column 7): Empty, displays "—"
+- **Realized P/L** (column 8): Empty, displays "—"
+- **Unrealized P/L** (column 9): Empty, displays "—"
+- **Total P/L** (column 10): From `matched_sell.trade.price` (formatted using `formatCurrency`)
+
+Note: Matched sells use columns that make semantic sense for their data. The "Ticker" column shows the Action ("Sell"), the "Original Quantity" column shows the consumed quantity, and the "Total P/L" column shows the price. Other columns that don't apply to matched sells display "—".
 
 ### Visual Hierarchy
 - Lot rows: Normal table row styling
@@ -305,11 +323,12 @@ Each matched sell sub-row displays:
 ## Data Formatting
 
 ### Display Format
-- **Currency values** (cost_basis, price): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
+- **Currency values** (cost_basis, price, realized_pnl, unrealized_pnl, total_pnl): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
 - **Date**: Format ISO date string (YYYY-MM-DD) to display format (e.g., "Jan 15, 2024")
 - **Quantity** (original_quantity, remaining_quantity, consumed_quantity): Display in full precision as returned from the API (arbitrary precision). The quantity should display exactly as returned from the API without decimal place constraints (e.g., "100", "0.5", "0.123456789").
 - **Action**: Display as-is from API ("Sell" for matched sells)
 - **Broker**: Display as-is from API (broker name string)
+- **P/L values** (realized_pnl, unrealized_pnl, total_pnl): Format as currency with color coding (green for positive values, red for negative values). Null values display as "N/A"
 
 ### Styling
 - Matched sell sub-rows: Use visual indentation and optional background color/border to show hierarchy
