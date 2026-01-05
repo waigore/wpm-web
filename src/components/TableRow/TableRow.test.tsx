@@ -185,5 +185,31 @@ describe('TableRow', () => {
       expect(mockNavigate).toHaveBeenCalledWith(`/portfolio/asset/${mockPosition.ticker}`);
     });
   });
+
+  it('navigates to asset lots page when Lots is clicked', async () => {
+    const user = userEvent.setup();
+
+    renderWithRouter(
+      <Table>
+        <TableBody>
+          <TableRow position={mockPosition} />
+        </TableBody>
+      </Table>
+    );
+
+    const menuButton = screen.getByLabelText(`Actions for ${mockPosition.ticker}`);
+    await user.click(menuButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Lots')).toBeInTheDocument();
+    });
+
+    const lotsMenuItem = screen.getByText('Lots');
+    await user.click(lotsMenuItem);
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith(`/portfolio/lots/${mockPosition.ticker}`);
+    });
+  });
 });
 

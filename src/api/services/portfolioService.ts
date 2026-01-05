@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse, PortfolioAssetTradesResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 
@@ -14,6 +14,15 @@ export interface PortfolioParams {
 }
 
 export interface AssetTradesParams {
+  page?: number;
+  size?: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+  start_date?: string;
+  end_date?: string;
+}
+
+export interface AssetLotsParams {
   page?: number;
   size?: number;
   sort_by?: string;
@@ -67,6 +76,37 @@ export async function getAssetTrades(
   const endDate = params?.end_date ?? null;
 
   return DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet(
+    ticker,
+    page,
+    size,
+    startDate,
+    endDate,
+    sortBy,
+    sortOrder
+  );
+}
+
+/**
+ * Get all lots for a specific asset with pagination, sorting, and optional date filtering
+ * @param ticker - Asset ticker symbol
+ * @param params - Optional parameters for pagination, sorting, and date filtering
+ * @returns PortfolioAssetLotsResponse with paginated lots
+ */
+export async function getAssetLots(
+  ticker: string,
+  params?: AssetLotsParams
+): Promise<PortfolioAssetLotsResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  const page = params?.page ?? 1;
+  const size = params?.size ?? 20;
+  const sortBy = params?.sort_by ?? 'date';
+  const sortOrder = params?.sort_order ?? 'asc';
+  const startDate = params?.start_date ?? null;
+  const endDate = params?.end_date ?? null;
+
+  return DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet(
     ticker,
     page,
     size,

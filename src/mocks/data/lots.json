@@ -1,0 +1,154 @@
+[
+  {
+    "date": "2024-01-15",
+    "ticker": "AAPL",
+    "asset_type": "Stock",
+    "original_quantity": 50.0,
+    "remaining_quantity": 40.0,
+    "cost_basis": 7525.0,
+    "matched_sells": [
+      {
+        "trade": {
+          "date": "2024-03-05",
+          "ticker": "AAPL",
+          "asset_type": "Stock",
+          "action": "Sell",
+          "order_instruction": "limit",
+          "quantity": 10.0,
+          "price": 160.00,
+          "broker": "Fidelity"
+        },
+        "consumed_quantity": 10.0
+      }
+    ]
+  },
+  {
+    "date": "2024-02-10",
+    "ticker": "AAPL",
+    "asset_type": "Stock",
+    "original_quantity": 50.0,
+    "remaining_quantity": 50.0,
+    "cost_basis": 7525.0,
+    "matched_sells": []
+  },
+  {
+    "date": "2023-12-01",
+    "ticker": "GOOGL",
+    "asset_type": "Stock",
+    "original_quantity": 25.0,
+    "remaining_quantity": 15.0,
+    "cost_basis": 62500.0,
+    "matched_sells": [
+      {
+        "trade": {
+          "date": "2024-02-20",
+          "ticker": "GOOGL",
+          "asset_type": "Stock",
+          "action": "Sell",
+          "order_instruction": "market",
+          "quantity": 5.0,
+          "price": 2600.0,
+          "broker": "TD Ameritrade"
+        },
+        "consumed_quantity": 5.0
+      },
+      {
+        "trade": {
+          "date": "2024-03-10",
+          "ticker": "GOOGL",
+          "asset_type": "Stock",
+          "action": "Sell",
+          "order_instruction": "limit",
+          "quantity": 5.0,
+          "price": 2700.0,
+          "broker": "TD Ameritrade"
+        },
+        "consumed_quantity": 5.0
+      }
+    ]
+  },
+  {
+    "date": "2024-01-20",
+    "ticker": "GOOGL",
+    "asset_type": "Stock",
+    "original_quantity": 25.0,
+    "remaining_quantity": 25.0,
+    "cost_basis": 62500.0,
+    "matched_sells": []
+  },
+  {
+    "date": "2024-01-10",
+    "ticker": "MSFT",
+    "asset_type": "Stock",
+    "original_quantity": 30.0,
+    "remaining_quantity": 30.0,
+    "cost_basis": 9000.0,
+    "matched_sells": []
+  },
+  {
+    "date": "2024-02-15",
+    "ticker": "MSFT",
+    "asset_type": "Stock",
+    "original_quantity": 45.0,
+    "remaining_quantity": 20.0,
+    "cost_basis": 13500.0,
+    "matched_sells": [
+      {
+        "trade": {
+          "date": "2024-03-20",
+          "ticker": "MSFT",
+          "asset_type": "Stock",
+          "action": "Sell",
+          "order_instruction": "market",
+          "quantity": 25.0,
+          "price": 380.50,
+          "broker": "Charles Schwab"
+        },
+        "consumed_quantity": 25.0
+      }
+    ]
+  },
+  {
+    "date": "2023-11-15",
+    "ticker": "BTC",
+    "asset_type": "Crypto",
+    "original_quantity": 0.25,
+    "remaining_quantity": 0.1,
+    "cost_basis": 11250.0,
+    "matched_sells": [
+      {
+        "trade": {
+          "date": "2024-02-01",
+          "ticker": "BTC",
+          "asset_type": "Crypto",
+          "action": "Sell",
+          "order_instruction": "limit",
+          "quantity": 0.15,
+          "price": 48000.0,
+          "broker": "Coinbase"
+        },
+        "consumed_quantity": 0.15
+      }
+    ]
+  },
+  {
+    "date": "2024-01-05",
+    "ticker": "BTC",
+    "asset_type": "Crypto",
+    "original_quantity": 0.25,
+    "remaining_quantity": 0.25,
+    "cost_basis": 11250.0,
+    "matched_sells": []
+  },
+  {
+    "date": "2024-01-25",
+    "ticker": "TSLA",
+    "asset_type": "Stock",
+    "original_quantity": 25.0,
+    "remaining_quantity": 25.0,
+    "cost_basis": 20000.0,
+    "matched_sells": []
+  }
+]
+
+

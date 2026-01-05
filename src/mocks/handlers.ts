@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import usersData from './data/users.json';
 import portfolioData from './data/portfolio.json';
 import tradesData from './data/trades.json';
+import lotsData from './data/lots.json';
 
 // Mock JWT token generator (simple implementation for development)
 function generateMockToken(username: string): string {
@@ -220,6 +221,110 @@ export const handlers = [
 
     return HttpResponse.json({
       trades: {
+        items: paginatedData,
+        total,
+        page,
+        size,
+        pages,
+      },
+    });
+  }),
+
+  // Asset lots endpoint - MSW will match requests to any origin with this path
+  http.get('*/portfolio/lots/:ticker', async ({ request, params }) => {
+    // Check for authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const { ticker } = params as { ticker: string };
+
+    // Filter lots by ticker
+    const filteredLots = lotsData.filter((lot) => lot.ticker === ticker);
+
+    // Return 404 if ticker not found
+    if (filteredLots.length === 0) {
+      return HttpResponse.json(
+        { detail: 'Asset not found' },
+        { status: 404 }
+      );
+    }
+
+    // Parse query parameters
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const size = parseInt(url.searchParams.get('size') || '20', 10);
+    const sortBy = url.searchParams.get('sort_by') || 'date';
+    const sortOrder = url.searchParams.get('sort_order') || 'asc';
+    const startDate = url.searchParams.get('start_date');
+    const endDate = url.searchParams.get('end_date');
+
+    // Validate sort_by field
+    const validSortFields = [
+      'date',
+      'ticker',
+      'asset_type',
+      'original_quantity',
+      'remaining_quantity',
+      'cost_basis',
+    ];
+    if (!validSortFields.includes(sortBy)) {
+      return HttpResponse.json(
+        { detail: [{ loc: ['query', 'sort_by'], msg: 'Invalid sort field', type: 'value_error' }] },
+        { status: 400 }
+      );
+    }
+
+    // Apply date filtering if provided
+    let dateFilteredLots = filteredLots;
+    if (startDate || endDate) {
+      dateFilteredLots = filteredLots.filter((lot) => {
+        const lotDate = lot.date;
+        if (startDate && lotDate < startDate) return false;
+        if (endDate && lotDate > endDate) return false;
+        return true;
+      });
+    }
+
+    // Sort data
+    const sortedData = [...dateFilteredLots].sort((a, b) => {
+      const aValue = (a as any)[sortBy];
+      const bValue = (b as any)[sortBy];
+
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      // Special handling for date field
+      if (sortBy === 'date') {
+        const aDate = new Date(aValue).getTime();
+        const bDate = new Date(bValue).getTime();
+        const comparison = aDate - bDate;
+        return sortOrder === 'asc' ? comparison : -comparison;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      const comparison = (aValue as number) - (bValue as number);
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    // Paginate
+    const startIndex = (page - 1) * size;
+    const endIndex = startIndex + size;
+    const paginatedData = sortedData.slice(startIndex, endIndex);
+    const total = sortedData.length;
+    const pages = Math.ceil(total / size);
+
+    return HttpResponse.json({
+      lots: {
         items: paginatedData,
         total,
         page,

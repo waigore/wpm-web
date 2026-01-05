@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getAllPositions, getAssetTrades } from './portfolioService';
+import { getAllPositions, getAssetTrades, getAssetLots } from './portfolioService';
 import { DefaultService } from '../client/services/DefaultService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import * as authService from './authService';
@@ -9,6 +9,7 @@ vi.mock('../client/services/DefaultService', () => ({
   DefaultService: {
     getAllPositionsEndpointPortfolioAllGet: vi.fn(),
     getAssetTradesEndpointPortfolioTradesTickerGet: vi.fn(),
+    getAssetLotsEndpointPortfolioLotsTickerGet: vi.fn(),
   },
 }));
 
@@ -239,6 +240,103 @@ describe('portfolioService', () => {
       });
 
       expect(DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet).toHaveBeenCalledWith(
+        'MSFT',
+        1,
+        20,
+        null,
+        null,
+        'date',
+        'asc'
+      );
+    });
+  });
+
+  describe('getAssetLots', () => {
+    it('should fetch lots with default parameters', async () => {
+      const mockResponse = {
+        lots: {
+          items: [],
+          total: 0,
+          page: 1,
+          size: 20,
+          pages: 0,
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet).mockResolvedValue(mockResponse);
+
+      const result = await getAssetLots('AAPL');
+
+      expect(result).toEqual(mockResponse);
+      expect(result.lots).toBeDefined();
+      expect(DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet).toHaveBeenCalledWith(
+        'AAPL',
+        1,
+        20,
+        null,
+        null,
+        'date',
+        'asc'
+      );
+      expect(authService.getToken).toHaveBeenCalled();
+    });
+
+    it('should fetch lots with custom parameters', async () => {
+      const mockResponse = {
+        lots: {
+          items: [],
+          total: 0,
+          page: 2,
+          size: 50,
+          pages: 0,
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet).mockResolvedValue(mockResponse);
+
+      const result = await getAssetLots('GOOGL', {
+        page: 2,
+        size: 50,
+        sort_by: 'cost_basis',
+        sort_order: 'desc',
+        start_date: '2024-01-01',
+        end_date: '2024-12-31',
+      });
+
+      expect(result).toEqual(mockResponse);
+      expect(DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet).toHaveBeenCalledWith(
+        'GOOGL',
+        2,
+        50,
+        '2024-01-01',
+        '2024-12-31',
+        'cost_basis',
+        'desc'
+      );
+    });
+
+    it('should use default values for undefined parameters', async () => {
+      const mockResponse = {
+        lots: {
+          items: [],
+          total: 0,
+          page: 1,
+          size: 20,
+          pages: 0,
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet).mockResolvedValue(mockResponse);
+
+      await getAssetLots('MSFT', {
+        page: undefined,
+        size: undefined,
+      });
+
+      expect(DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet).toHaveBeenCalledWith(
         'MSFT',
         1,
         20,

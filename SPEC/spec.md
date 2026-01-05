@@ -117,7 +117,7 @@ The development workflow follows a specification-driven approach:
    - Component composition and layout
 
 3. **Implementation Phase**:
-   - Generate TypeScript types and API client from OpenAPI spec using `openapi-typescript-codegen`
+   - Generate TypeScript types and API client from OpenAPI spec if there have been uncommitted changes to `SPEC/openapi.json`. Use `npx openapi-typescript-codegen --input ./SPEC/openapi.json --output ./src/api/client --client axios` to regenerate the client. Note that generated files in `src/api/client/` should not be manually edited. Generally, there is no need to regenerate during development as the OpenAPI specification is typically updated before the workflow begins. However, if the specification is updated during implementation (e.g., new APIs added, API signature changes), regenerate the client using the same command.
    - Implement components according to specifications, starting with base components and building up to pages
    - Integrate API services using generated client
    - Implement routing and authentication flow

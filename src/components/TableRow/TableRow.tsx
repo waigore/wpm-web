@@ -36,6 +36,11 @@ export const TableRow: React.FC<TableRowProps> = ({ position, ...props }) => {
     navigate(`/portfolio/asset/${position.ticker}`);
   };
 
+  const handleLotsClick = () => {
+    handleMenuClose();
+    navigate(`/portfolio/lots/${position.ticker}`);
+  };
+
   return (
     <>
       <MuiTableRow {...props}>
@@ -78,6 +83,7 @@ export const TableRow: React.FC<TableRowProps> = ({ position, ...props }) => {
         }}
       >
         <MenuItem onClick={handleTradesClick}>Trades</MenuItem>
+        <MenuItem onClick={handleLotsClick}>Lots</MenuItem>
       </Menu>
     </>
   );
