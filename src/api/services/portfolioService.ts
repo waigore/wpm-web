@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 
@@ -29,6 +29,12 @@ export interface AssetLotsParams {
   sort_order?: 'asc' | 'desc';
   start_date?: string;
   end_date?: string;
+}
+
+export interface PortfolioPerformanceParams {
+  start_date?: string | null;
+  end_date?: string | null;
+  granularity?: 'daily' | 'weekly' | 'monthly';
 }
 
 /**
@@ -117,3 +123,24 @@ export async function getAssetLots(
   );
 }
 
+/**
+ * Get portfolio performance data with optional date filtering and granularity
+ * @param params - Optional parameters for date range and granularity
+ * @returns PortfolioPerformanceResponse with history points
+ */
+export async function getPortfolioPerformance(
+  params?: PortfolioPerformanceParams
+): Promise<PortfolioPerformanceResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  const startDate = params?.start_date ?? null;
+  const endDate = params?.end_date ?? null;
+  const granularity = params?.granularity ?? 'daily';
+
+  return DefaultService.getPortfolioPerformanceEndpointPortfolioAllPerformanceGet(
+    startDate,
+    endDate,
+    granularity
+  );
+}

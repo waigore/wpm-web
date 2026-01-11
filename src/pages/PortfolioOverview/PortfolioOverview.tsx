@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -9,6 +10,7 @@ import {
   TableCell as MuiTableCell,
   CircularProgress,
   Paper,
+  Button,
 } from '@mui/material';
 import { Table as TableComponent } from '../../components/Table/Table';
 import { TableHeader } from '../../components/TableHeader/TableHeader';
@@ -25,6 +27,7 @@ import logger from '../../utils/logger';
 type SortByField = 'ticker' | 'asset_type' | 'quantity' | 'average_price' | 'cost_basis' | 'current_price' | 'market_value' | 'unrealized_gain_loss';
 
 export const PortfolioOverview: React.FC = () => {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { sortBy, sortOrder, handleSort: handleSortChange, getSortDirection } = useTableSort<SortByField>('ticker');
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,9 +99,18 @@ export const PortfolioOverview: React.FC = () => {
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Breadcrumbs items={[{ label: 'Home', path: '/portfolio' }, { label: 'Portfolio' }]} />
       <Box sx={{ mb: 2 }} />
-      <Typography variant="h4" component="h1" gutterBottom>
-        Portfolio Overview
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" component="h1">
+          Portfolio Overview
+        </Typography>
+        <Button
+          variant="outlined"
+          onClick={() => navigate('/portfolio/performance')}
+          aria-label="View portfolio performance"
+        >
+          Performance
+        </Button>
+      </Box>
 
       {!loading && !error && (
         <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>

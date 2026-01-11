@@ -3,6 +3,7 @@ import usersData from './data/users.json';
 import portfolioData from './data/portfolio.json';
 import tradesData from './data/trades.json';
 import lotsData from './data/lots.json';
+import performanceData from './data/portfolio-performance.json';
 
 // Mock JWT token generator (simple implementation for development)
 function generateMockToken(username: string): string {
@@ -335,6 +336,72 @@ export const handlers = [
         size,
         pages,
       },
+    });
+  }),
+
+  // Portfolio performance endpoint - MSW will match requests to any origin with this path
+  http.get('*/portfolio/all/performance', async ({ request }) => {
+    // Check for authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Parse query parameters
+    const url = new URL(request.url);
+    const startDate = url.searchParams.get('start_date');
+    const endDate = url.searchParams.get('end_date');
+    const granularity = url.searchParams.get('granularity') || 'daily';
+
+    // Validate granularity
+    const validGranularities = ['daily', 'weekly', 'monthly'];
+    if (!validGranularities.includes(granularity)) {
+      return HttpResponse.json(
+        { detail: [{ loc: ['query', 'granularity'], msg: 'Invalid granularity', type: 'value_error' }] },
+        { status: 422 }
+      );
+    }
+
+    // Filter by date range
+    let filteredData = [...performanceData];
+    if (startDate || endDate) {
+      filteredData = performanceData.filter((point) => {
+        const pointDate = point.date;
+        if (startDate && pointDate < startDate) return false;
+        if (endDate && pointDate > endDate) return false;
+        return true;
+      });
+    }
+
+    // Apply granularity filtering
+    let granularityFilteredData = filteredData;
+    if (granularity === 'weekly') {
+      // Filter to only Monday dates (or first day of week)
+      granularityFilteredData = filteredData.filter((point) => {
+        const date = new Date(point.date);
+        return date.getDay() === 1; // Monday
+      });
+    } else if (granularity === 'monthly') {
+      // Filter to only first day of month
+      granularityFilteredData = filteredData.filter((point) => {
+        const date = new Date(point.date);
+        return date.getDate() === 1;
+      });
+    }
+    // For 'daily', use all filtered data
+
+    // Sort by date (ascending)
+    granularityFilteredData.sort((a, b) => {
+      const aDate = new Date(a.date).getTime();
+      const bDate = new Date(b.date).getTime();
+      return aDate - bDate;
+    });
+
+    return HttpResponse.json({
+      history_points: granularityFilteredData,
     });
   }),
 ];

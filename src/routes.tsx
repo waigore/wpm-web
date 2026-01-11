@@ -3,6 +3,7 @@ import { Login } from './pages/Login/Login';
 import { PortfolioOverview } from './pages/PortfolioOverview/PortfolioOverview';
 import { AssetTrades } from './pages/AssetTrades/AssetTrades';
 import { AssetLots } from './pages/AssetLots/AssetLots';
+import { PortfolioPerformance } from './pages/PortfolioPerformance';
 import { ProtectedLayout } from './components/ProtectedLayout/ProtectedLayout';
 import { useAuth } from './hooks/useAuth';
 import React from 'react';
@@ -54,6 +55,16 @@ export const routes = [
       <ProtectedRoute>
         <ProtectedLayout>
           <AssetLots />
+        </ProtectedLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/portfolio/performance',
+    element: (
+      <ProtectedRoute>
+        <ProtectedLayout>
+          <PortfolioPerformance />
         </ProtectedLayout>
       </ProtectedRoute>
     ),
