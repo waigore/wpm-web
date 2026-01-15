@@ -47,6 +47,7 @@ const mockPositions = [
     current_price: 175.25,
     market_value: 17525.0,
     unrealized_gain_loss: 2475.0,
+    allocation_percentage: 7.88,
   },
   {
     ticker: 'GOOGL',
@@ -58,6 +59,7 @@ const mockPositions = [
     current_price: 2800.0,
     market_value: 140000.0,
     unrealized_gain_loss: 15000.0,
+    allocation_percentage: 62.96,
   },
 ];
 
@@ -508,7 +510,7 @@ describe('PortfolioOverview', () => {
 
   it('handles all sortable columns', async () => {
     const user = userEvent.setup();
-    const sortableColumns = ['ticker', 'asset_type', 'quantity', 'average_price', 'cost_basis', 'current_price', 'market_value', 'unrealized_gain_loss'];
+    const sortableColumns = ['ticker', 'asset_type', 'quantity', 'average_price', 'cost_basis', 'current_price', 'market_value', 'unrealized_gain_loss', 'allocation_percentage'];
     
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
       positions: {
@@ -539,6 +541,7 @@ describe('PortfolioOverview', () => {
       'Current Price',
       'Market Value',
       'Unrealized Gain/Loss',
+      'Allocation %',
     ];
 
     for (const headerText of columnHeaders.slice(0, 3)) { // Test first 3 to avoid too many calls

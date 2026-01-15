@@ -8,7 +8,8 @@
     "cost_basis_method": "fifo",
     "current_price": 175.25,
     "market_value": 17525.0,
-    "unrealized_gain_loss": 2475.0
+    "unrealized_gain_loss": 2475.0,
+    "allocation_percentage": 7.88
   },
   {
     "ticker": "GOOGL",
@@ -19,7 +20,8 @@
     "cost_basis_method": "average",
     "current_price": 2800.0,
     "market_value": 140000.0,
-    "unrealized_gain_loss": 15000.0
+    "unrealized_gain_loss": 15000.0,
+    "allocation_percentage": 62.96
   },
   {
     "ticker": "MSFT",
@@ -30,7 +32,8 @@
     "cost_basis_method": "fifo",
     "current_price": 380.50,
     "market_value": 28537.5,
-    "unrealized_gain_loss": 6037.5
+    "unrealized_gain_loss": 6037.5,
+    "allocation_percentage": 12.84
   },
   {
     "ticker": "BTC",
@@ -41,7 +44,8 @@
     "cost_basis_method": "average",
     "current_price": 50000.0,
     "market_value": 25000.0,
-    "unrealized_gain_loss": 2500.0
+    "unrealized_gain_loss": 2500.0,
+    "allocation_percentage": 11.25
   },
   {
     "ticker": "TSLA",
@@ -52,7 +56,8 @@
     "cost_basis_method": "fifo",
     "current_price": 900.0,
     "market_value": 22500.0,
-    "unrealized_gain_loss": 2500.0
+    "unrealized_gain_loss": 2500.0,
+    "allocation_percentage": 10.13
   }
 ]
 

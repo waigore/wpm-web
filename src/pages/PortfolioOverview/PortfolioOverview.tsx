@@ -24,7 +24,7 @@ import { useTableSort } from '../../hooks/useTableSort';
 import { formatCurrency } from '../../utils/formatters';
 import logger from '../../utils/logger';
 
-type SortByField = 'ticker' | 'asset_type' | 'quantity' | 'average_price' | 'cost_basis' | 'current_price' | 'market_value' | 'unrealized_gain_loss';
+type SortByField = 'ticker' | 'asset_type' | 'quantity' | 'average_price' | 'cost_basis' | 'current_price' | 'market_value' | 'unrealized_gain_loss' | 'allocation_percentage';
 
 export const PortfolioOverview: React.FC = () => {
   const navigate = useNavigate();
@@ -253,12 +253,22 @@ export const PortfolioOverview: React.FC = () => {
                 >
                   Unrealized Gain/Loss
                 </TableHeader>
+                <TableHeader
+                  sortable
+                  active={sortBy === 'allocation_percentage'}
+                  sortDirection={getSortDirection('allocation_percentage')}
+                  onSort={() => handleSort('allocation_percentage')}
+                  align="right"
+                  aria-sort={sortBy === 'allocation_percentage' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                >
+                  Allocation %
+                </TableHeader>
               </MuiTableRow>
             </TableHead>
             <TableBody>
               {positions.length === 0 ? (
                 <MuiTableRow>
-                  <MuiTableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <MuiTableCell colSpan={9} align="center" sx={{ py: 4 }}>
                     No positions found
                   </MuiTableCell>
                 </MuiTableRow>

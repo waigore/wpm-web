@@ -50,7 +50,8 @@ PortfolioOverview
 │               │           ├── Cost Basis (sortable)
 │               │           ├── Current Price (sortable)
 │               │           ├── Market Value (sortable)
-│               │           └── Unrealized Gain/Loss (sortable)
+│               │           ├── Unrealized Gain/Loss (sortable)
+│               │           └── Allocation % (sortable)
 │               └── MUI TableBody
 │                   └── MUI TableRow[] (for each position in current page)
 │                       └── MUI TableCell[] (position data)
@@ -137,7 +138,7 @@ PortfolioOverview
 - **Query Parameters**:
   - `page` (optional, integer, default: 1, minimum: 1): Page number (1-indexed)
   - `size` (optional, integer, default: 50, minimum: 1, maximum: 100): Number of items per page
-  - `sort_by` (optional, string, default: "ticker"): Field to sort by (e.g., "ticker", "asset_type", "quantity", "cost_basis", "market_value", "unrealized_gain_loss")
+  - `sort_by` (optional, string, default: "ticker"): Field to sort by (e.g., "ticker", "asset_type", "quantity", "cost_basis", "market_value", "unrealized_gain_loss", "allocation_percentage")
   - `sort_order` (optional, string, default: "asc", pattern: "^(asc|desc)$"): Sort order
 - **Response (200)**: 
   ```typescript
@@ -219,6 +220,7 @@ PortfolioOverview
 6. **Current Price**: Field name "current_price" - Numerical sort (null handling handled by server)
 7. **Market Value**: Field name "market_value" - Numerical sort (null handling handled by server)
 8. **Unrealized Gain/Loss**: Field name "unrealized_gain_loss" - Numerical sort (null handling handled by server)
+9. **Allocation %**: Field name "allocation_percentage" - Numerical sort (0.00-100.00, null handling handled by server)
 
 ### Sort Behavior
 - **Server-side sorting**: All sorting performed by backend API
@@ -261,8 +263,9 @@ PortfolioOverview
 - **Currency values** (cost_basis, market_value, unrealized_gain_loss, average_price, current_price): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
 - **Portfolio totals** (total_market_value, total_unrealized_gain_loss, total_cost_basis): Format as USD currency with 2 decimal places using `formatCurrency()` utility
 - **Quantity**: Display in full precision as returned from the API (arbitrary precision). The quantity should display exactly as returned from the API without decimal place constraints (e.g., "100", "0.5", "0.123456789").
+- **Allocation Percentage** (allocation_percentage): Format as percentage with 2 decimal places (e.g., "25.50%"). Value range is 0.00-100.00. Null values display as "N/A".
 - **Percentages** (if calculated): Format as percentage with 2 decimal places (e.g., "+5.23%")
-- **Null values**: Display as "N/A" or "-" (applies to total_market_value and total_unrealized_gain_loss which may be null)
+- **Null values**: Display as "N/A" or "-" (applies to total_market_value, total_unrealized_gain_loss, and allocation_percentage which may be null)
 
 ### Gain/Loss Styling
 - Positive unrealized gain: Green text/color (MUI success color)

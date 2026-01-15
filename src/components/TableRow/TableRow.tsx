@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { Position } from '../../api/client';
-import { formatCurrency, formatQuantity } from '../../utils/formatters';
+import { formatCurrency, formatQuantity, formatNumber } from '../../utils/formatters';
 import { getGainLossColor } from '../../utils/colorHelpers';
 
 export interface TableRowProps extends Omit<MuiTableRowProps, 'children'> {
@@ -59,6 +59,9 @@ export const TableRow: React.FC<TableRowProps> = ({ position, ...props }) => {
           }}
         >
           {formatCurrency(position.unrealized_gain_loss)}
+        </TableCell>
+        <TableCell align="right">
+          {formatNumber(position.allocation_percentage, 2) + '%'}
         </TableCell>
         <TableCell padding="checkbox" align="right">
           <IconButton

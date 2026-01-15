@@ -65,6 +65,7 @@ export const handlers = [
       'current_price',
       'market_value',
       'unrealized_gain_loss',
+      'allocation_percentage',
     ];
     if (!validSortFields.includes(sortBy)) {
       return HttpResponse.json(

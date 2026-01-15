@@ -27,6 +27,7 @@ const mockPosition: Position = {
   current_price: 175.25,
   market_value: 17525.0,
   unrealized_gain_loss: 2475.0,
+  allocation_percentage: 7.88,
 };
 
 const renderWithRouter = (component: React.ReactElement) => {
@@ -51,6 +52,7 @@ describe('TableRow', () => {
             <TableCell>Current Price</TableCell>
             <TableCell>Market Value</TableCell>
             <TableCell>Gain/Loss</TableCell>
+            <TableCell>Allocation %</TableCell>
             <TableCell>Actions</TableCell>
           </MuiTableRow>
         </TableHead>
@@ -70,6 +72,7 @@ describe('TableRow', () => {
       current_price: null,
       market_value: null,
       unrealized_gain_loss: null,
+      allocation_percentage: null,
     };
 
     renderWithRouter(
@@ -81,6 +84,35 @@ describe('TableRow', () => {
     );
 
     expect(screen.getByText('AAPL')).toBeInTheDocument();
+  });
+
+  it('renders allocation_percentage correctly', () => {
+    renderWithRouter(
+      <Table>
+        <TableBody>
+          <TableRow position={mockPosition} />
+        </TableBody>
+      </Table>
+    );
+
+    expect(screen.getByText('7.88%')).toBeInTheDocument();
+  });
+
+  it('handles null allocation_percentage', () => {
+    const positionWithNullAllocation: Position = {
+      ...mockPosition,
+      allocation_percentage: null,
+    };
+
+    renderWithRouter(
+      <Table>
+        <TableBody>
+          <TableRow position={positionWithNullAllocation} />
+        </TableBody>
+      </Table>
+    );
+
+    expect(screen.getByText('N/A%')).toBeInTheDocument();
   });
 
   it('formats currency values correctly', () => {
