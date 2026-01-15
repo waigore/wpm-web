@@ -44,6 +44,10 @@ PortfolioOverview
 │               │   └── MUI TableRow
 │               │       └── MUI TableCell[] (with MUI TableSortLabel)
 │               │           ├── Ticker (sortable)
+│               │           │   └── MUI Tooltip (on hover, shows full metadata)
+│               │           │       └── MUI Box (ticker cell content)
+│               │           │           ├── MUI Typography (ticker as primary text)
+│               │           │           └── MUI Typography (asset name as secondary label, variant="caption", max 40 chars)
 │               │           ├── Asset Type (sortable)
 │               │           ├── Quantity (sortable)
 │               │           ├── Average Price (sortable)
@@ -55,6 +59,10 @@ PortfolioOverview
 │               └── MUI TableBody
 │                   └── MUI TableRow[] (for each position in current page)
 │                       └── MUI TableCell[] (position data)
+│                           └── First cell (Ticker): MUI Tooltip with metadata details
+│                               └── MUI Box
+│                                   ├── Ticker (primary)
+│                                   └── Asset Name (secondary, truncated to 40 chars)
 │   └── MUI Box (pagination controls)
 │       ├── MUI Pagination (page navigation)
 │       ├── MUI Select (page size selector: 10, 20, 50, 100)
@@ -79,6 +87,9 @@ PortfolioOverview
 - `totalMarketValue: number | null` - Total market value across all positions (from API)
 - `totalUnrealizedGainLoss: number | null` - Total unrealized gain/loss across all positions (from API)
 - `totalCostBasis: number` - Total cost basis across all positions (from API)
+- `metadata: Record<string, AssetMetadata | null>` - Asset metadata map keyed by ticker (from `/asset/metadata/all` API)
+- `metadataLoading: boolean` - Loading state for metadata fetch (separate from positions loading)
+- `metadataError: string | null` - Error state for metadata fetch (non-blocking, doesn't prevent page render)
 
 ## Interactions
 
@@ -92,6 +103,8 @@ PortfolioOverview
      - Logs component mount at DEBUG level
      - Calls `portfolioService.getAllPositions()` with default parameters (page=1, size=50, sort_by="ticker", sort_order="asc") via `usePortfolio()` hook
      - Sets loading state to true
+     - Once positions are loaded, triggers non-blocking metadata fetch via `useAssetMetadata()` hook
+     - Metadata fetch does not block page rendering - positions display immediately
 
 2. **Column Header Click** (server-side sorting)
    - User clicks on sortable column header
@@ -131,7 +144,7 @@ PortfolioOverview
 
 ## API Calls
 
-### Endpoint
+### Portfolio Positions Endpoint
 - **Method**: GET
 - **Path**: `/portfolio/all`
 - **Authentication**: Required (JWT token in Authorization header)
@@ -166,14 +179,52 @@ PortfolioOverview
 - Includes JWT token from AuthContext in Authorization header
 - Passes query parameters to API endpoint
 
+### Asset Metadata Endpoint
+- **Method**: GET
+- **Path**: `/asset/metadata/all`
+- **Authentication**: Required (JWT token in Authorization header)
+- **Query Parameters**: None
+- **Response (200)**: 
+  ```typescript
+  {
+    metadata: {
+      [ticker: string]: {
+        name?: string,
+        type?: string,
+        market_cap?: string | number,
+        sector?: string,
+        industry?: string,
+        country?: string,
+        category?: string
+      } | null
+    }
+  }
+  ```
+- **Response (401)**: Unauthorized (token expired/invalid)
+- **Response (500)**: Server error
+
+### Service Function
+- `portfolioService.getAllAssetMetadata(): Promise<AssetMetadataAllResponse>`
+- Returns `AssetMetadataAllResponse` containing `metadata` dictionary mapping ticker to metadata object or null
+- Includes JWT token from AuthContext in Authorization header
+- Non-blocking: Metadata fetch does not prevent page rendering if it fails
+
 ### Data Fetching
-- Fetches data on component mount with default parameters
-- Re-fetches when:
+- Fetches portfolio positions on component mount with default parameters
+- Re-fetches positions when:
   - Sort parameters change (sort_by, sort_order)
   - Pagination parameters change (page, size)
   - Authentication state changes (if user re-authenticates)
 - Uses `usePortfolio()` hook to manage fetching logic with parameters
 - Each API call includes current state parameters for sorting and pagination
+- **Metadata Fetching** (non-blocking):
+  - Triggers after positions are successfully loaded
+  - Uses `useAssetMetadata()` hook with array of unique tickers from positions
+  - Fetches metadata for all tickers in a single batch API call
+  - Does not block page rendering - positions display immediately
+  - Metadata populates asynchronously when API responds
+  - If metadata fetch fails, page continues to function without metadata
+  - Metadata loading state is separate from positions loading state
 
 ### Error Handling
 - **400 Bad Request**: 
@@ -256,6 +307,43 @@ PortfolioOverview
 ### External Events
 - Navigation event: Redirects to `/login` if authentication fails
 - AuthContext subscription: Re-fetches data if authentication state changes
+
+## Asset Metadata Display
+
+### Ticker Cell Structure
+- **Primary Text**: Ticker symbol (e.g., "GOOG")
+- **Secondary Label**: Asset name from metadata (e.g., "Alphabet Inc.")
+  - Displayed below ticker using MUI Typography variant="caption"
+  - Truncated to maximum 40 characters with ellipsis (`...`) if longer
+  - Only displayed when metadata.name exists
+  - Uses `textOverflow: 'ellipsis'` and `overflow: 'hidden'` CSS
+
+### Tooltip Behavior
+- **Trigger**: Mouse hover over ticker cell
+- **Visibility**: Only shown when metadata is available for the ticker
+- **Content Structure**: Displays all metadata fields in separate rows:
+  ```
+  Name: {name}
+  Type: {type}
+  Market Cap: {market_cap}
+  Sector: {sector}
+  Industry: {industry}
+  Country: {country}
+  Category: {category}
+  ```
+- **Formatting**:
+  - Market Cap: Format as currency if numeric (e.g., "$4.04T")
+  - All fields: Display "N/A" or "-" if value is null/undefined
+  - Each field on its own row for readability
+- **Implementation**: MUI `Tooltip` component wrapping the ticker TableCell
+- **Accessibility**: Tooltip content is accessible to screen readers
+
+### Metadata Loading Behavior
+- Metadata fetch is **non-blocking**: Page renders positions immediately
+- Metadata loads asynchronously after positions are available
+- If metadata is not yet loaded, ticker cell displays without secondary label or tooltip
+- When metadata arrives, ticker cell updates to show asset name and enable tooltip
+- Metadata loading errors do not affect page functionality
 
 ## Data Formatting
 

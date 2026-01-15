@@ -10,10 +10,16 @@ export interface TableProps extends MuiTableProps {
   children: React.ReactNode;
 }
 
-export const Table: React.FC<TableProps> = ({ children, ...props }) => {
+export const Table: React.FC<TableProps> = ({ children, sx, ...props }) => {
   return (
-    <TableContainer component={Paper}>
-      <MuiTable {...props}>{children}</MuiTable>
+    <TableContainer 
+      component={Paper}
+      sx={{
+        width: '100%',
+        overflowX: 'auto',
+      }}
+    >
+      <MuiTable {...props} sx={{ width: '100%', ...sx }}>{children}</MuiTable>
     </TableContainer>
   );
 };

@@ -5,6 +5,7 @@ import { TableRow } from './TableRow';
 import { Table, TableHead, TableBody, TableRow as MuiTableRow, TableCell } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
 import type { Position } from '../../api/client';
+import type { AssetMetadata } from '../../hooks/useAssetMetadata';
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -241,6 +242,176 @@ describe('TableRow', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(`/portfolio/lots/${mockPosition.ticker}`);
+    });
+  });
+
+  describe('Metadata Display', () => {
+    const mockMetadata: AssetMetadata = {
+      name: 'Apple Inc.',
+      type: 'Stock',
+      market_cap: '$3.02T',
+      sector: 'Technology',
+      industry: 'Consumer Electronics',
+      country: 'United States',
+      category: 'Large Cap',
+    };
+
+    it('displays asset name when metadata is provided', () => {
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} metadata={mockMetadata} />
+          </TableBody>
+        </Table>
+      );
+
+      expect(screen.getByText('AAPL')).toBeInTheDocument();
+      expect(screen.getByText('Apple Inc.')).toBeInTheDocument();
+    });
+
+    it('does not display asset name when metadata is not provided', () => {
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} />
+          </TableBody>
+        </Table>
+      );
+
+      expect(screen.getByText('AAPL')).toBeInTheDocument();
+      expect(screen.queryByText('Apple Inc.')).not.toBeInTheDocument();
+    });
+
+    it('does not display asset name when metadata is null', () => {
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} metadata={null} />
+          </TableBody>
+        </Table>
+      );
+
+      expect(screen.getByText('AAPL')).toBeInTheDocument();
+      expect(screen.queryByText('Apple Inc.')).not.toBeInTheDocument();
+    });
+
+    it('truncates asset name to 40 characters', () => {
+      const longNameMetadata: AssetMetadata = {
+        name: 'This is a very long company name that exceeds forty characters limit',
+        type: 'Stock',
+      };
+
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} metadata={longNameMetadata} />
+          </TableBody>
+        </Table>
+      );
+
+      // Find the name element by looking for text that starts with the first part
+      const nameElement = screen.getByText((content, element) => {
+        return element?.textContent?.startsWith('This is a very long company') === true;
+      });
+      expect(nameElement).toBeInTheDocument();
+      // Check that it's truncated (should be 40 chars + "...")
+      const textContent = nameElement.textContent || '';
+      expect(textContent.length).toBeLessThanOrEqual(43);
+      expect(textContent).toContain('...');
+    });
+
+    it('displays tooltip with full metadata on hover', async () => {
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} metadata={mockMetadata} />
+          </TableBody>
+        </Table>
+      );
+
+      // Find the element with the tooltip (it has aria-label with metadata)
+      const tooltipElement = screen.getByLabelText(/Name: Apple Inc./);
+      expect(tooltipElement).toBeInTheDocument();
+
+      // Verify all metadata fields are in the aria-label
+      const ariaLabel = tooltipElement.getAttribute('aria-label') || '';
+      expect(ariaLabel).toContain('Name: Apple Inc.');
+      expect(ariaLabel).toContain('Type: Stock');
+      expect(ariaLabel).toContain('Market Cap: $3.02T');
+      expect(ariaLabel).toContain('Sector: Technology');
+      expect(ariaLabel).toContain('Industry: Consumer Electronics');
+      expect(ariaLabel).toContain('Country: United States');
+      expect(ariaLabel).toContain('Category: Large Cap');
+    });
+
+    it('does not show tooltip when metadata is not provided', async () => {
+      const user = userEvent.setup();
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} />
+          </TableBody>
+        </Table>
+      );
+
+      const tickerCell = screen.getByText('AAPL').closest('td');
+      expect(tickerCell).toBeInTheDocument();
+
+      if (tickerCell) {
+        await user.hover(tickerCell);
+
+        // Wait a bit to ensure tooltip doesn't appear
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        expect(screen.queryByText(/Name:/)).not.toBeInTheDocument();
+      }
+    });
+
+    it('handles metadata with missing fields', () => {
+      const partialMetadata: AssetMetadata = {
+        name: 'Apple Inc.',
+        type: 'Stock',
+        // Other fields missing
+      };
+
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} metadata={partialMetadata} />
+          </TableBody>
+        </Table>
+      );
+
+      expect(screen.getByText('AAPL')).toBeInTheDocument();
+      expect(screen.getByText('Apple Inc.')).toBeInTheDocument();
+    });
+
+    it('displays "unknown" for category when not provided', () => {
+      const metadataWithoutCategory: AssetMetadata = {
+        name: 'Apple Inc.',
+        type: 'Stock',
+        market_cap: '$3.02T',
+        sector: 'Technology',
+        industry: 'Consumer Electronics',
+        country: 'United States',
+        // category missing
+      };
+
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} metadata={metadataWithoutCategory} />
+          </TableBody>
+        </Table>
+      );
+
+      // Find the element with the tooltip
+      const tooltipElement = screen.getByLabelText(/Name: Apple Inc./);
+      expect(tooltipElement).toBeInTheDocument();
+
+      // Verify category shows as "unknown"
+      const ariaLabel = tooltipElement.getAttribute('aria-label') || '';
+      expect(ariaLabel).toContain('Category: unknown');
     });
   });
 });

@@ -4,6 +4,7 @@ import portfolioData from './data/portfolio.json';
 import tradesData from './data/trades.json';
 import lotsData from './data/lots.json';
 import performanceData from './data/portfolio-performance.json';
+import assetMetadataData from './data/asset-metadata.json';
 
 // Mock JWT token generator (simple implementation for development)
 function generateMockToken(username: string): string {
@@ -404,6 +405,21 @@ export const handlers = [
     return HttpResponse.json({
       history_points: granularityFilteredData,
     });
+  }),
+
+  // Asset metadata all endpoint - MSW will match requests to any origin with this path
+  http.get('*/asset/metadata/all', async ({ request }) => {
+    // Check for authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Return mock metadata response
+    return HttpResponse.json(assetMetadataData);
   }),
 ];
 

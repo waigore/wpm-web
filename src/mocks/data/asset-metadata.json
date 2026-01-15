@@ -1,0 +1,49 @@
+{
+  "metadata": {
+    "AAPL": {
+      "name": "Apple Inc.",
+      "type": "Stock",
+      "market_cap": "$3.02T",
+      "sector": "Technology",
+      "industry": "Consumer Electronics",
+      "country": "United States",
+      "category": "Large Cap"
+    },
+    "GOOGL": {
+      "name": "Alphabet Inc.",
+      "type": "Stock",
+      "market_cap": "$1.75T",
+      "sector": "Communication Services",
+      "industry": "Internet Content & Information",
+      "country": "United States",
+      "category": "Large Cap"
+    },
+    "MSFT": {
+      "name": "Microsoft Corporation",
+      "type": "Stock",
+      "market_cap": "$3.10T",
+      "sector": "Technology",
+      "industry": "Software—Infrastructure",
+      "country": "United States",
+      "category": "Large Cap"
+    },
+    "BTC": {
+      "name": "Bitcoin",
+      "type": "Crypto",
+      "market_cap": "$1.00T",
+      "sector": "Cryptocurrency",
+      "industry": "Digital Currency",
+      "country": "Global",
+      "category": "Cryptocurrency"
+    },
+    "TSLA": {
+      "name": "Tesla, Inc.",
+      "type": "Stock",
+      "market_cap": "$750.00B",
+      "sector": "Consumer Cyclical",
+      "industry": "Auto Manufacturers",
+      "country": "United States",
+      "category": "Large Cap"
+    }
+  }
+}

@@ -7,17 +7,22 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Tooltip,
+  Typography,
+  Box,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { Position } from '../../api/client';
 import { formatCurrency, formatQuantity, formatNumber } from '../../utils/formatters';
 import { getGainLossColor } from '../../utils/colorHelpers';
+import type { AssetMetadata } from '../../hooks/useAssetMetadata';
 
 export interface TableRowProps extends Omit<MuiTableRowProps, 'children'> {
   position: Position;
+  metadata?: AssetMetadata;
 }
 
-export const TableRow: React.FC<TableRowProps> = ({ position, ...props }) => {
+export const TableRow: React.FC<TableRowProps> = ({ position, metadata, ...props }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -41,10 +46,90 @@ export const TableRow: React.FC<TableRowProps> = ({ position, ...props }) => {
     navigate(`/portfolio/lots/${position.ticker}`);
   };
 
+  const formatMetadataForTooltip = (meta: AssetMetadata): string => {
+    if (!meta) {
+      return '';
+    }
+
+    const fields = [
+      { label: 'Name', value: meta.name },
+      { label: 'Type', value: meta.type },
+      { label: 'Market Cap', value: meta.market_cap },
+      { label: 'Sector', value: meta.sector },
+      { label: 'Industry', value: meta.industry },
+      { label: 'Country', value: meta.country },
+      { label: 'Category', value: meta.category ?? 'unknown' },
+    ];
+
+    return fields
+      .map((field) => {
+        const value = field.value ?? 'N/A';
+        return `${field.label}: ${value}`;
+      })
+      .join('\n');
+  };
+
+  const truncateName = (name: string | undefined): string => {
+    if (!name) {
+      return '';
+    }
+    if (name.length <= 40) {
+      return name;
+    }
+    return name.substring(0, 40) + '...';
+  };
+
+  const assetName = metadata?.name ? truncateName(metadata.name) : null;
+  const tooltipContent = metadata ? formatMetadataForTooltip(metadata) : null;
+
+  const tickerCellContent = (
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        flexDirection: 'column',
+        width: '100%',
+        minWidth: 0, // Allow flexbox to shrink below content size
+      }}
+    >
+      <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {position.ticker}
+      </Typography>
+      {assetName && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            maxWidth: '100%',
+            minWidth: 0, // Allow flexbox to shrink below content size
+          }}
+        >
+          {assetName}
+        </Typography>
+      )}
+    </Box>
+  );
+
   return (
     <>
       <MuiTableRow {...props}>
-        <TableCell>{position.ticker}</TableCell>
+        <TableCell
+          sx={{
+            width: 200,
+            maxWidth: 200,
+            paddingRight: 1,
+          }}
+        >
+          {tooltipContent ? (
+            <Tooltip title={tooltipContent} arrow placement="right">
+              {tickerCellContent}
+            </Tooltip>
+          ) : (
+            tickerCellContent
+          )}
+        </TableCell>
         <TableCell>{position.asset_type}</TableCell>
         <TableCell align="right">{formatQuantity(position.quantity)}</TableCell>
         <TableCell align="right">{formatCurrency(position.average_price)}</TableCell>

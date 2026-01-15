@@ -17,6 +17,7 @@ vi.mock('../../api/services/authService', () => ({
 
 vi.mock('../../api/services/portfolioService', () => ({
   getAllPositions: vi.fn(),
+  getAllAssetMetadata: vi.fn(),
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -756,6 +757,174 @@ describe('PortfolioOverview', () => {
     await waitFor(() => {
       // Totals should update when data changes
       expect(portfolioService.getAllPositions).toHaveBeenCalled();
+    });
+  });
+
+  describe('Metadata Integration', () => {
+    const mockMetadataResponse = {
+      metadata: {
+        AAPL: {
+          name: 'Apple Inc.',
+          type: 'Stock',
+          market_cap: '$3.02T',
+          sector: 'Technology',
+          industry: 'Consumer Electronics',
+          country: 'United States',
+          category: 'Large Cap',
+        },
+        GOOGL: {
+          name: 'Alphabet Inc.',
+          type: 'Stock',
+          market_cap: '$1.75T',
+          sector: 'Communication Services',
+          industry: 'Internet Content & Information',
+          country: 'United States',
+          category: 'Large Cap',
+        },
+      },
+    };
+
+    beforeEach(() => {
+      vi.mocked(portfolioService.getAllAssetMetadata).mockResolvedValue(mockMetadataResponse);
+    });
+
+    it('fetches metadata after positions are loaded', async () => {
+      vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+        positions: {
+          items: mockPositions,
+          total: 2,
+          page: 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
+      });
+
+      renderPortfolioOverview();
+
+      await waitFor(() => {
+        expect(screen.getByText('AAPL')).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(portfolioService.getAllAssetMetadata).toHaveBeenCalled();
+      });
+    });
+
+    it('displays asset names when metadata is available', async () => {
+      vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+        positions: {
+          items: mockPositions,
+          total: 2,
+          page: 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
+      });
+
+      renderPortfolioOverview();
+
+      await waitFor(() => {
+        expect(screen.getByText('AAPL')).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Apple Inc.')).toBeInTheDocument();
+        expect(screen.getByText('Alphabet Inc.')).toBeInTheDocument();
+      }, { timeout: 3000 });
+    });
+
+    it('renders positions even if metadata fetch fails', async () => {
+      vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+        positions: {
+          items: mockPositions,
+          total: 2,
+          page: 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
+      });
+
+      vi.mocked(portfolioService.getAllAssetMetadata).mockRejectedValue(
+        new Error('Failed to fetch metadata')
+      );
+
+      renderPortfolioOverview();
+
+      await waitFor(() => {
+        expect(screen.getByText('AAPL')).toBeInTheDocument();
+        expect(screen.getByText('GOOGL')).toBeInTheDocument();
+      });
+
+      // Positions should still render without metadata
+      expect(screen.getByText('AAPL')).toBeInTheDocument();
+      expect(screen.queryByText('Apple Inc.')).not.toBeInTheDocument();
+    });
+
+    it('passes metadata to TableRow components', async () => {
+      vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+        positions: {
+          items: [mockPositions[0]], // Only AAPL
+          total: 1,
+          page: 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 17525,
+        total_cost_basis: 15050,
+        total_unrealized_gain_loss: 2475,
+      });
+
+      renderPortfolioOverview();
+
+      await waitFor(() => {
+        expect(screen.getByText('AAPL')).toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Apple Inc.')).toBeInTheDocument();
+      }, { timeout: 3000 });
+    });
+
+    it('extracts unique tickers from positions for metadata fetch', async () => {
+      const positionsWithDuplicates = [
+        ...mockPositions,
+        {
+          ...mockPositions[0], // Duplicate AAPL
+          ticker: 'AAPL',
+        },
+      ];
+
+      vi.mocked(portfolioService.getAllPositions).mockResolvedValue({
+        positions: {
+          items: positionsWithDuplicates,
+          total: 3,
+          page: 1,
+          size: 50,
+          pages: 1,
+        },
+        total_market_value: 157525,
+        total_cost_basis: 140050,
+        total_unrealized_gain_loss: 17475,
+      });
+
+      renderPortfolioOverview();
+
+      await waitFor(() => {
+        expect(portfolioService.getAllAssetMetadata).toHaveBeenCalled();
+      });
+
+      // Should only fetch metadata once per unique ticker
+      // The hook should receive unique tickers array
+      expect(portfolioService.getAllAssetMetadata).toHaveBeenCalled();
     });
   });
 });

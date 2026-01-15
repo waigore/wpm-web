@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 
@@ -143,4 +143,15 @@ export async function getPortfolioPerformance(
     endDate,
     granularity
   );
+}
+
+/**
+ * Get metadata for all assets in the portfolio
+ * @returns AssetMetadataAllResponse containing metadata dictionary mapping ticker to metadata
+ */
+export async function getAllAssetMetadata(): Promise<AssetMetadataAllResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  return DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet();
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getAllPositions, getAssetTrades, getAssetLots } from './portfolioService';
+import { getAllPositions, getAssetTrades, getAssetLots, getAllAssetMetadata } from './portfolioService';
 import { DefaultService } from '../client/services/DefaultService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import * as authService from './authService';
@@ -10,6 +10,7 @@ vi.mock('../client/services/DefaultService', () => ({
     getAllPositionsEndpointPortfolioAllGet: vi.fn(),
     getAssetTradesEndpointPortfolioTradesTickerGet: vi.fn(),
     getAssetLotsEndpointPortfolioLotsTickerGet: vi.fn(),
+    getAllAssetMetadataEndpointAssetMetadataAllGet: vi.fn(),
   },
 }));
 
@@ -345,6 +346,98 @@ describe('portfolioService', () => {
         'date',
         'asc'
       );
+    });
+  });
+
+  describe('getAllAssetMetadata', () => {
+    it('should fetch metadata successfully', async () => {
+      const mockResponse = {
+        metadata: {
+          AAPL: {
+            name: 'Apple Inc.',
+            type: 'Stock',
+            market_cap: '$3.02T',
+            sector: 'Technology',
+            industry: 'Consumer Electronics',
+            country: 'United States',
+            category: 'Large Cap',
+          },
+          GOOGL: {
+            name: 'Alphabet Inc.',
+            type: 'Stock',
+            market_cap: '$1.75T',
+            sector: 'Communication Services',
+            industry: 'Internet Content & Information',
+            country: 'United States',
+            category: 'Large Cap',
+          },
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet).mockResolvedValue(mockResponse);
+
+      const result = await getAllAssetMetadata();
+
+      expect(result).toEqual(mockResponse);
+      expect(result.metadata).toBeDefined();
+      expect(result.metadata.AAPL).toBeDefined();
+      expect(result.metadata.AAPL?.name).toBe('Apple Inc.');
+      expect(DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet).toHaveBeenCalled();
+      expect(authService.getToken).toHaveBeenCalled();
+    });
+
+    it('should handle metadata with null values', async () => {
+      const mockResponse = {
+        metadata: {
+          AAPL: {
+            name: 'Apple Inc.',
+            type: 'Stock',
+            market_cap: '$3.02T',
+            sector: 'Technology',
+            industry: 'Consumer Electronics',
+            country: 'United States',
+            category: 'Large Cap',
+          },
+          INVALID: null,
+        },
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet).mockResolvedValue(mockResponse);
+
+      const result = await getAllAssetMetadata();
+
+      expect(result).toEqual(mockResponse);
+      expect(result.metadata.INVALID).toBeNull();
+      expect(result.metadata.AAPL).not.toBeNull();
+    });
+
+    it('should handle empty metadata response', async () => {
+      const mockResponse = {
+        metadata: {},
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet).mockResolvedValue(mockResponse);
+
+      const result = await getAllAssetMetadata();
+
+      expect(result).toEqual(mockResponse);
+      expect(Object.keys(result.metadata)).toHaveLength(0);
+    });
+
+    it('should call getToken to set authentication', async () => {
+      const mockResponse = {
+        metadata: {},
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet).mockResolvedValue(mockResponse);
+
+      await getAllAssetMetadata();
+
+      expect(authService.getToken).toHaveBeenCalled();
     });
   });
 });

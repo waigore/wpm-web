@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -20,6 +20,7 @@ import { PaginationControls } from '../../components/PaginationControls/Paginati
 import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 import { usePortfolio } from '../../hooks/usePortfolio';
+import { useAssetMetadata } from '../../hooks/useAssetMetadata';
 import { useTableSort } from '../../hooks/useTableSort';
 import { formatCurrency } from '../../utils/formatters';
 import logger from '../../utils/logger';
@@ -56,6 +57,14 @@ export const PortfolioOverview: React.FC = () => {
     sort_by: sortBy,
     sort_order: sortOrder,
   });
+
+  // Extract unique tickers from positions for metadata fetch
+  const tickers = useMemo(() => {
+    return Array.from(new Set(positions.map((p) => p.ticker)));
+  }, [positions]);
+
+  // Fetch metadata non-blocking (doesn't prevent page render)
+  const { metadata } = useAssetMetadata(tickers);
 
   const handleSort = (column: SortByField) => {
     handleSortChange(column);
@@ -181,6 +190,11 @@ export const PortfolioOverview: React.FC = () => {
                   sortDirection={getSortDirection('ticker')}
                   onSort={() => handleSort('ticker')}
                   aria-sort={sortBy === 'ticker' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  sx={{
+                    width: 200,
+                    maxWidth: 200,
+                    paddingRight: 1,
+                  }}
                 >
                   Ticker
                 </TableHeader>
@@ -274,7 +288,11 @@ export const PortfolioOverview: React.FC = () => {
                 </MuiTableRow>
               ) : (
                 positions.map((position, index) => (
-                  <TableRow key={`${position.ticker}-${index}`} position={position} />
+                  <TableRow
+                    key={`${position.ticker}-${index}`}
+                    position={position}
+                    metadata={metadata[position.ticker]}
+                  />
                 ))
               )}
             </TableBody>

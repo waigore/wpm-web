@@ -1,5 +1,5 @@
 import React from 'react';
-import { TableCell, TableSortLabel } from '@mui/material';
+import { TableCell, TableSortLabel, SxProps, Theme } from '@mui/material';
 
 export type SortDirection = 'asc' | 'desc' | false;
 
@@ -10,6 +10,7 @@ export interface TableHeaderProps {
   active?: boolean;
   onSort?: () => void;
   align?: 'left' | 'right' | 'center';
+  sx?: SxProps<Theme>;
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({
@@ -19,10 +20,11 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
   active = false,
   onSort,
   align = 'left',
+  sx,
 }) => {
   if (sortable && onSort) {
     return (
-      <TableCell align={align}>
+      <TableCell align={align} sx={sx}>
         <TableSortLabel
           active={active}
           direction={sortDirection || undefined}
@@ -34,6 +36,6 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
     );
   }
 
-  return <TableCell align={align}>{children}</TableCell>;
+  return <TableCell align={align} sx={sx}>{children}</TableCell>;
 };
 
