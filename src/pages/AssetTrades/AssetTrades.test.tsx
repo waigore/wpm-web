@@ -64,7 +64,7 @@ const mockTrades = [
 const renderAssetTrades = (ticker: string = 'AAPL') => {
   mockUseParams.mockReturnValue({ ticker });
   return render(
-    <MemoryRouter initialEntries={[`/portfolio/asset/${ticker}`]}>
+    <MemoryRouter initialEntries={[`/portfolio/trades/${ticker}`]}>
       <AuthProvider>
         <AssetTrades />
       </AuthProvider>

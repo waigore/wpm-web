@@ -9,7 +9,7 @@ const meta: Meta<typeof AssetTrades> = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <MemoryRouter initialEntries={['/portfolio/asset/AAPL']}>
+      <MemoryRouter initialEntries={['/portfolio/trades/AAPL']}>
         <BrowserRouter>
           <AuthProvider>
             <Story />
@@ -44,7 +44,7 @@ export const Default: Story = {
 export const DifferentTicker: Story = {
   decorators: [
     (Story) => (
-      <MemoryRouter initialEntries={['/portfolio/asset/GOOGL']}>
+      <MemoryRouter initialEntries={['/portfolio/trades/GOOGL']}>
         <BrowserRouter>
           <AuthProvider>
             <Story />

@@ -120,7 +120,7 @@ AssetTrades
 
 ### Endpoint
 - **Method**: GET
-- **Path**: `/portfolio/asset/{ticker}`
+- **Path**: `/portfolio/trades/{ticker}`
 - **Authentication**: Required (JWT token in Authorization header)
 - **Path Parameters**:
   - `ticker` (required, string): Asset ticker symbol

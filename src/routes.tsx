@@ -82,7 +82,7 @@ export const routes = [
     ),
   },
   {
-    path: '/portfolio/asset/:ticker',
+    path: '/portfolio/trades/:ticker',
     element: (
       <ProtectedRoute>
         <ProtectedLayout>

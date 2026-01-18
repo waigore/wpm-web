@@ -64,7 +64,7 @@ export const MultipleLevels: Story = {
     items: [
       { label: 'Home', path: '/portfolio' },
       { label: 'Portfolio', path: '/portfolio' },
-      { label: 'Asset Trades', path: '/portfolio/asset/AAPL' },
+      { label: 'Asset Trades', path: '/portfolio/trades/AAPL' },
       { label: 'AAPL' },
     ],
   },

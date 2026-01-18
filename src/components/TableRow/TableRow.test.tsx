@@ -215,7 +215,7 @@ describe('TableRow', () => {
     await user.click(tradesMenuItem);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith(`/portfolio/asset/${mockPosition.ticker}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`/portfolio/trades/${mockPosition.ticker}`);
     });
   });
 

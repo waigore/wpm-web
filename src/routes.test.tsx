@@ -326,7 +326,7 @@ describe('routes', () => {
       expect(routePaths).toContain('/login');
       expect(routePaths).toContain('/session-expired');
       expect(routePaths).toContain('/portfolio');
-      expect(routePaths).toContain('/portfolio/asset/:ticker');
+      expect(routePaths).toContain('/portfolio/trades/:ticker');
       expect(routePaths).toContain('/portfolio/lots/:ticker');
       expect(routePaths).toContain('/portfolio/performance');
     });

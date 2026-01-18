@@ -105,7 +105,7 @@ describe('Breadcrumbs', () => {
     const items = [
       { label: 'Home', path: '/portfolio' },
       { label: 'Portfolio', path: '/portfolio' },
-      { label: 'Asset Trades', path: '/portfolio/asset/AAPL' },
+      { label: 'Asset Trades', path: '/portfolio/trades/AAPL' },
       { label: 'AAPL' },
     ];
 
@@ -118,7 +118,7 @@ describe('Breadcrumbs', () => {
 
     expect(homeLink).toHaveAttribute('href', '/portfolio');
     expect(portfolioLink).toHaveAttribute('href', '/portfolio');
-    expect(assetTradesLink).toHaveAttribute('href', '/portfolio/asset/AAPL');
+    expect(assetTradesLink).toHaveAttribute('href', '/portfolio/trades/AAPL');
     expect(aaplElement.closest('a')).not.toBeInTheDocument();
     expect(aaplElement).toHaveAttribute('aria-current', 'page');
   });

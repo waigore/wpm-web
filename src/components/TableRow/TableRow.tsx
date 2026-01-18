@@ -38,7 +38,7 @@ export const TableRow: React.FC<TableRowProps> = ({ position, metadata, ...props
 
   const handleTradesClick = () => {
     handleMenuClose();
-    navigate(`/portfolio/asset/${position.ticker}`);
+    navigate(`/portfolio/trades/${position.ticker}`);
   };
 
   const handleLotsClick = () => {
