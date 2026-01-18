@@ -10,7 +10,10 @@ Display all lots for a specific asset (identified by ticker) in a sortable table
 
 ### Visual Structure
 - Page header with title: "<ticker>: Lots" (e.g., "AAPL: Lots")
-- Sortable table displaying lots (server-side sorted)
+- Filter section (below header): Broker multiselect filter with active filter chips
+- Two-column layout:
+  - Left column (2/3 width): Sortable table displaying lots (server-side sorted)
+  - Right column (1/3 width): Position card displaying overall and per-broker positions
 - Matched sells displayed as indented sub-rows under each lot (when present)
 - Pagination controls (below table): Page navigation, page size selector, page info
 - Loading indicator during data fetch
@@ -23,11 +26,19 @@ AssetLots
 ├── MUI Container
 │   ├── MUI Box (header section)
 │   │   └── MUI Typography (variant="h4", title: "{ticker}: Lots")
+│   ├── MUI Box (filter section, conditionally rendered)
+│   │   ├── MUI FormControl (broker multiselect)
+│   │   │   ├── MUI InputLabel ("Broker")
+│   │   │   └── MUI Select (multiple, renders chips for selected values)
+│   │   └── MUI Box (active filter chips, conditionally rendered)
+│   │       └── MUI Chip[] (one per selected broker, with delete icon)
 │   ├── MUI CircularProgress (loading, conditionally rendered, centered)
 │   ├── MUI Alert (error, conditionally rendered, severity="error")
 │   │   ├── Error text
 │   │   └── MUI Button (retry action)
-│   └── MUI TableContainer
+│   └── MUI Grid (two-column layout)
+│       ├── MUI Grid item (xs=12, md=8, left column)
+│       │   └── MUI TableContainer
 │       └── MUI Paper
 │           └── MUI Table
 │               ├── MUI TableHead
@@ -48,10 +59,23 @@ AssetLots
 │                       ├── LotTableRow (lot data)
 │                       └── MUI TableRow[] (matched sells as sub-rows, conditionally rendered)
 │                           └── MUI TableCell[] (matched sell data with indentation)
-│   └── MUI Box (pagination controls)
-│       ├── MUI Pagination (page navigation)
-│       ├── MUI Select (page size selector: 10, 20, 50, 100)
-│       └── MUI Typography (page info: "Showing X-Y of Z lots")
+│       │   └── MUI Box (pagination controls)
+│       │       ├── MUI Pagination (page navigation)
+│       │       ├── MUI Select (page size selector: 10, 20, 50, 100)
+│       │       └── MUI Typography (page info: "Showing X-Y of Z lots")
+│       └── MUI Grid item (xs=12, md=4, right column)
+│           └── MUI Paper (Position card, sticky positioning)
+│               ├── MUI Typography (variant="h6", "Position")
+│               ├── MUI Box (overall position section)
+│               │   ├── MUI Typography (variant="subtitle2", "Overall")
+│               │   ├── MUI Typography (quantity: formatted)
+│               │   └── MUI Typography (cost basis: formatted currency)
+│               ├── MUI Divider (conditionally rendered)
+│               └── MUI Box[] (per-broker positions, conditionally rendered)
+│                   └── MUI Box (per broker)
+│                       ├── MUI Typography (broker name, fontWeight="medium")
+│                       ├── MUI Typography (quantity: formatted)
+│                       └── MUI Typography (cost basis: formatted currency)
 ```
 
 ## Props
@@ -70,6 +94,10 @@ AssetLots
 - `pageSize: number` - Number of items per page (default: 20, options: 10, 20, 50, 100)
 - `totalItems: number` - Total number of lots across all pages
 - `totalPages: number` - Total number of pages
+- `selectedBrokers: string[]` - Selected broker names for filtering (default: [])
+- `availableBrokers: string[]` - List of available brokers for the asset (from `/asset/brokers/{ticker}` API)
+- `overallPosition: OverallPosition | null` - Overall position data from API response
+- `perBrokerPositions: BrokerPosition[]` - Per-broker position data from API response
 
 ## Interactions
 
@@ -85,7 +113,20 @@ AssetLots
      - Calls `portfolioService.getAssetLots(ticker)` with default parameters (page=1, size=20, sort_by="date", sort_order="asc") via `useAssetLots()` hook
      - Sets loading state to true
 
-2. **Column Header Click** (server-side sorting)
+2. **Broker Filter Selection**
+   - User selects/deselects brokers in the multiselect dropdown
+   - Selected brokers are displayed as chips in the filter section
+   - Changing filter selection:
+     - Updates `selectedBrokers` state
+     - Resets to page 1 (`currentPage = 1`)
+     - Converts `selectedBrokers` array to comma-separated string for API parameter
+     - Triggers API call with `brokers` query parameter
+     - Logs filter change at INFO level: `"Broker filter changed: {brokers}"`
+     - Shows loading state during API call
+     - Updates table display with filtered results
+     - Updates position data (overall and per-broker) based on filtered lots
+
+3. **Column Header Click** (server-side sorting)
    - User clicks on sortable column header
    - If same column clicked:
      - Toggles sort direction (asc → desc → asc)
@@ -98,7 +139,7 @@ AssetLots
    - Shows loading state during API call
    - Updates table display with sorted results from server
 
-3. **Page Navigation** (pagination)
+4. **Page Navigation** (pagination)
    - User clicks on pagination control (next, previous, specific page number)
    - Updates `currentPage` state
    - Triggers API call with new page parameter
@@ -106,7 +147,7 @@ AssetLots
    - Shows loading state during API call
    - Updates table display with new page of results
 
-4. **Page Size Change** (pagination)
+5. **Page Size Change** (pagination)
    - User selects different page size from dropdown (10, 20, 50, 100)
    - Updates `pageSize` state
    - Resets to page 1 (`currentPage = 1`)
@@ -115,7 +156,7 @@ AssetLots
    - Shows loading state during API call
    - Updates table display with new page size results
 
-5. **Retry on Error**
+6. **Retry on Error**
    - User clicks retry button in error message
    - Clears error state
    - Retries `getAssetLots()` API call with current state parameters (ticker, page, size, sort_by, sort_order)
@@ -123,7 +164,9 @@ AssetLots
 
 ## API Calls
 
-### Endpoint
+### Endpoints
+
+#### Get Asset Lots
 - **Method**: GET
 - **Path**: `/portfolio/lots/{ticker}`
 - **Authentication**: Required (JWT token in Authorization header)
@@ -136,6 +179,7 @@ AssetLots
   - `sort_order` (optional, string, default: "asc", pattern: "^(asc|desc)$"): Sort order
   - `start_date` (optional, string, ISO format YYYY-MM-DD): Start date for filtering lots (inclusive)
   - `end_date` (optional, string, ISO format YYYY-MM-DD): End date for filtering lots (inclusive)
+  - `brokers` (optional, string): Comma-separated list of broker names to filter by
 - **Response (200)**: 
   ```typescript
   {
@@ -145,7 +189,20 @@ AssetLots
       page: number,
       size: number,
       pages: number
-    }
+    },
+    overall_position: {
+      quantity: number,
+      cost_basis: number,
+      market_value: number | null
+    },
+    per_broker_positions: [
+      {
+        broker: string,
+        quantity: number,
+        cost_basis: number,
+        market_value: number | null
+      }
+    ]
   }
   ```
   Where `Lot` contains:
@@ -177,21 +234,47 @@ AssetLots
 - **Response (422)**: Validation Error (invalid query parameters)
 - **Response (500)**: Server error
 
-### Service Function
-- `portfolioService.getAssetLots(ticker: string, params?: { page?: number, size?: number, sort_by?: string, sort_order?: 'asc' | 'desc', start_date?: string, end_date?: string }): Promise<PortfolioAssetLotsResponse>`
-- Returns `PortfolioAssetLotsResponse` containing `lots` (Page_Lot_)
-- Includes JWT token from AuthContext in Authorization header
-- Passes ticker as path parameter and query parameters to API endpoint
+#### Get Asset Brokers
+- **Method**: GET
+- **Path**: `/asset/brokers/{ticker}`
+- **Authentication**: Required (JWT token in Authorization header)
+- **Path Parameters**:
+  - `ticker` (required, string): Asset ticker symbol
+- **Response (200)**:
+  ```typescript
+  {
+    ticker: string,
+    brokers: string[]
+  }
+  ```
+- **Response (401)**: Unauthorized (token expired/invalid)
+- **Response (404)**: Not Found (ticker not found)
+- **Response (422)**: Validation Error (invalid path parameter)
+- **Response (500)**: Server error
+
+### Service Functions
+- `portfolioService.getAssetLots(ticker: string, params?: { page?: number, size?: number, sort_by?: string, sort_order?: 'asc' | 'desc', start_date?: string, end_date?: string, brokers?: string }): Promise<PortfolioAssetLotsResponse>`
+  - Returns `PortfolioAssetLotsResponse` containing `lots` (Page_Lot_), `overall_position` (OverallPosition), and `per_broker_positions` (BrokerPosition[])
+  - Includes JWT token from AuthContext in Authorization header
+  - Passes ticker as path parameter and query parameters to API endpoint
+- `portfolioService.getAssetBrokers(ticker: string): Promise<AssetBrokersResponse>`
+  - Returns `AssetBrokersResponse` containing `ticker` and `brokers` (string[])
+  - Includes JWT token from AuthContext in Authorization header
+  - Used to populate the broker filter dropdown
 
 ### Data Fetching
-- Fetches data on component mount with default parameters
-- Re-fetches when:
+- Fetches broker list on component mount via `useAssetBrokers()` hook from `/asset/brokers/{ticker}` endpoint
+- Fetches lots data on component mount with default parameters via `useAssetLots()` hook
+- Re-fetches lots when:
   - Sort parameters change (sort_by, sort_order)
   - Pagination parameters change (page, size)
+  - Broker filter changes (brokers parameter)
+  - Date filter changes (start_date, end_date)
   - Ticker changes (if navigating to different asset)
   - Authentication state changes (if user re-authenticates)
 - Uses `useAssetLots()` hook to manage fetching logic with parameters
-- Each API call includes current state parameters for sorting and pagination
+- Uses `useAssetBrokers()` hook to fetch available brokers for the ticker
+- Each API call includes current state parameters for sorting, pagination, and filtering
 
 ### Error Handling
 - **400 Bad Request**: 

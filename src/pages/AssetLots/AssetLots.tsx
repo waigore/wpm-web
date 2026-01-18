@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Container,
@@ -9,6 +9,14 @@ import {
   TableRow as MuiTableRow,
   TableCell as MuiTableCell,
   CircularProgress,
+  Select,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Chip,
+  Paper,
+  Grid,
+  Divider,
 } from '@mui/material';
 import { Table as TableComponent } from '../../components/Table/Table';
 import { TableHeader } from '../../components/TableHeader/TableHeader';
@@ -18,7 +26,9 @@ import { PaginationControls } from '../../components/PaginationControls/Paginati
 import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 import { useAssetLots } from '../../hooks/useAssetLots';
+import { useAssetBrokers } from '../../hooks/useAssetBrokers';
 import { useTableSort } from '../../hooks/useTableSort';
+import { formatCurrency, formatQuantity } from '../../utils/formatters';
 import logger from '../../utils/logger';
 
 type SortByField = 'date' | 'ticker' | 'asset_type' | 'broker' | 'original_quantity' | 'remaining_quantity' | 'cost_basis' | 'realized_pnl' | 'unrealized_pnl' | 'total_pnl';
@@ -29,6 +39,7 @@ export const AssetLots: React.FC = () => {
   const { sortBy, sortOrder, handleSort: handleSortChange, getSortDirection } = useTableSort<SortByField>('date');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [selectedBrokers, setSelectedBrokers] = useState<string[]>([]);
 
   useEffect(() => {
     if (isAuthenticated && ticker) {
@@ -37,18 +48,27 @@ export const AssetLots: React.FC = () => {
     }
   }, [isAuthenticated, ticker]);
 
+  const { brokers: availableBrokers } = useAssetBrokers(ticker || '');
+
+  const brokersParam = useMemo(() => {
+    return selectedBrokers.length > 0 ? selectedBrokers.join(',') : undefined;
+  }, [selectedBrokers]);
+
   const {
     lots,
     totalItems,
     totalPages,
     loading,
     error,
+    overallPosition,
+    perBrokerPositions,
     refetch,
   } = useAssetLots(ticker || '', {
     page: currentPage,
     size: pageSize,
     sort_by: sortBy,
     sort_order: sortOrder,
+    brokers: brokersParam,
   });
 
   const handleSort = (column: SortByField) => {
@@ -72,6 +92,13 @@ export const AssetLots: React.FC = () => {
   const handleRetry = async () => {
     logger.info('Retrying asset lots fetch', { context: 'AssetLots' });
     await refetch();
+  };
+
+  const handleBrokerChange = (event: any) => {
+    const value = event.target.value as string[];
+    setSelectedBrokers(value);
+    setCurrentPage(1); // Reset to first page on filter change
+    logger.info(`Broker filter changed: ${value.join(', ')}`, { context: 'AssetLots' });
   };
 
   useEffect(() => {
@@ -102,6 +129,54 @@ export const AssetLots: React.FC = () => {
         {ticker}: Lots
       </Typography>
 
+      {!loading && !error && (
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth size="small" sx={{ mb: 2, maxWidth: 400 }}>
+            <InputLabel id="broker-filter-label">Broker</InputLabel>
+            <Select
+              labelId="broker-filter-label"
+              id="broker-filter"
+              multiple
+              value={selectedBrokers}
+              onChange={handleBrokerChange}
+              label="Broker"
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {(selected as string[]).map((value) => (
+                    <Chip key={value} label={value} size="small" />
+                  ))}
+                </Box>
+              )}
+            >
+              {availableBrokers.map((broker) => (
+                <MenuItem key={broker} value={broker}>
+                  {broker}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          {selectedBrokers.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Filter:
+              </Typography>
+              {selectedBrokers.map((broker) => (
+                <Chip
+                  key={broker}
+                  label={`Broker: ${broker}`}
+                  size="small"
+                  onDelete={() => {
+                    const newSelected = selectedBrokers.filter((b) => b !== broker);
+                    setSelectedBrokers(newSelected);
+                    setCurrentPage(1);
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
+
       {loading && (
         <Box display="flex" justifyContent="center" alignItems="center" p={4}>
           <CircularProgress aria-label="Loading lot data" aria-live="polite" />
@@ -115,8 +190,9 @@ export const AssetLots: React.FC = () => {
       )}
 
       {!loading && !error && (
-        <>
-          <TableComponent aria-label="Asset lots table">
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <TableComponent aria-label="Asset lots table">
             <TableHead>
               <MuiTableRow>
                 <TableHeader
@@ -232,17 +308,61 @@ export const AssetLots: React.FC = () => {
             </TableBody>
           </TableComponent>
 
-          <PaginationControls
-            totalItems={totalItems}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            loading={loading}
-            itemLabel="lots"
-          />
-        </>
+            <PaginationControls
+              totalItems={totalItems}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              loading={loading}
+              itemLabel="lots"
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper elevation={2} sx={{ p: 2, position: 'sticky', top: 20 }}>
+              <Typography variant="h6" component="h2" gutterBottom>
+                Position
+              </Typography>
+              {overallPosition && (
+                <>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Overall
+                    </Typography>
+                    <Typography variant="body2">
+                      Quantity: {formatQuantity(overallPosition.quantity)}
+                    </Typography>
+                    <Typography variant="body2">
+                      Cost Basis: {formatCurrency(overallPosition.cost_basis)}
+                    </Typography>
+                  </Box>
+                  {perBrokerPositions.length > 0 && (
+                    <>
+                      <Divider sx={{ my: 2 }} />
+                      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                        Per Broker
+                      </Typography>
+                      {perBrokerPositions.map((position) => (
+                        <Box key={position.broker} sx={{ mb: 2 }}>
+                          <Typography variant="body2" fontWeight="medium">
+                            {position.broker}
+                          </Typography>
+                          <Typography variant="body2" sx={{ pl: 2 }}>
+                            Quantity: {formatQuantity(position.quantity)}
+                          </Typography>
+                          <Typography variant="body2" sx={{ pl: 2 }}>
+                            Cost Basis: {formatCurrency(position.cost_basis)}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
+            </Paper>
+          </Grid>
+        </Grid>
       )}
     </Container>
   );

@@ -277,6 +277,7 @@ describe('portfolioService', () => {
         20,
         null,
         null,
+        null,
         'date',
         'asc'
       );
@@ -313,6 +314,7 @@ describe('portfolioService', () => {
         50,
         '2024-01-01',
         '2024-12-31',
+        null,
         'cost_basis',
         'desc'
       );
@@ -341,6 +343,7 @@ describe('portfolioService', () => {
         'MSFT',
         1,
         20,
+        null,
         null,
         null,
         'date',

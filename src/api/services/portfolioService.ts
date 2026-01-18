@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse, AssetBrokersResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import { handle401Error } from './errorHandler';
@@ -30,6 +30,7 @@ export interface AssetLotsParams {
   sort_order?: 'asc' | 'desc';
   start_date?: string;
   end_date?: string;
+  brokers?: string;
 }
 
 export interface PortfolioPerformanceParams {
@@ -106,7 +107,7 @@ export async function getAssetTrades(
 /**
  * Get all lots for a specific asset with pagination, sorting, and optional date filtering
  * @param ticker - Asset ticker symbol
- * @param params - Optional parameters for pagination, sorting, and date filtering
+ * @param params - Optional parameters for pagination, sorting, date filtering, and broker filtering
  * @returns PortfolioAssetLotsResponse with paginated lots
  */
 export async function getAssetLots(
@@ -122,6 +123,7 @@ export async function getAssetLots(
   const sortOrder = params?.sort_order ?? 'asc';
   const startDate = params?.start_date ?? null;
   const endDate = params?.end_date ?? null;
+  const brokers = params?.brokers ?? null;
 
   try {
     return await DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet(
@@ -130,6 +132,7 @@ export async function getAssetLots(
       size,
       startDate,
       endDate,
+      brokers,
       sortBy,
       sortOrder
     );
@@ -176,6 +179,23 @@ export async function getAllAssetMetadata(): Promise<AssetMetadataAllResponse> {
 
   try {
     return await DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet();
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
+}
+
+/**
+ * Get list of brokers for a specific asset
+ * @param ticker - Asset ticker symbol
+ * @returns AssetBrokersResponse containing ticker and list of broker names
+ */
+export async function getAssetBrokers(ticker: string): Promise<AssetBrokersResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  try {
+    return await DefaultService.getAssetBrokersEndpointAssetBrokersTickerGet(ticker);
   } catch (error: unknown) {
     handle401Error(error);
     throw error;

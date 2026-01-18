@@ -265,6 +265,8 @@ export const handlers = [
     const sortOrder = url.searchParams.get('sort_order') || 'asc';
     const startDate = url.searchParams.get('start_date');
     const endDate = url.searchParams.get('end_date');
+    const brokersParam = url.searchParams.get('brokers');
+    const selectedBrokers = brokersParam ? brokersParam.split(',').map((b) => b.trim()) : null;
 
     // Validate sort_by field
     const validSortFields = [
@@ -297,8 +299,16 @@ export const handlers = [
       });
     }
 
+    // Apply broker filtering if provided
+    let brokerFilteredLots = dateFilteredLots;
+    if (selectedBrokers && selectedBrokers.length > 0) {
+      brokerFilteredLots = dateFilteredLots.filter((lot) =>
+        selectedBrokers.includes(lot.broker)
+      );
+    }
+
     // Sort data
-    const sortedData = [...dateFilteredLots].sort((a, b) => {
+    const sortedData = [...brokerFilteredLots].sort((a, b) => {
       const aValue = (a as any)[sortBy];
       const bValue = (b as any)[sortBy];
 
@@ -330,6 +340,34 @@ export const handlers = [
     const total = sortedData.length;
     const pages = Math.ceil(total / size);
 
+    // Calculate position data from brokerFilteredLots (all lots, not just paginated)
+    // Overall position: sum of all remaining quantities and cost bases
+    const overallQuantity = brokerFilteredLots.reduce(
+      (sum, lot) => sum + (lot.remaining_quantity || 0),
+      0
+    );
+    const overallCostBasis = brokerFilteredLots.reduce(
+      (sum, lot) => sum + (lot.cost_basis || 0),
+      0
+    );
+
+    // Per-broker positions: group by broker and sum
+    const brokerPositionsMap = new Map<string, { quantity: number; cost_basis: number }>();
+    brokerFilteredLots.forEach((lot) => {
+      const existing = brokerPositionsMap.get(lot.broker) || { quantity: 0, cost_basis: 0 };
+      brokerPositionsMap.set(lot.broker, {
+        quantity: existing.quantity + (lot.remaining_quantity || 0),
+        cost_basis: existing.cost_basis + (lot.cost_basis || 0),
+      });
+    });
+
+    const perBrokerPositions = Array.from(brokerPositionsMap.entries()).map(([broker, data]) => ({
+      broker,
+      quantity: data.quantity,
+      cost_basis: data.cost_basis,
+      market_value: null, // Mock data doesn't include current price, so set to null
+    }));
+
     return HttpResponse.json({
       lots: {
         items: paginatedData,
@@ -338,6 +376,45 @@ export const handlers = [
         size,
         pages,
       },
+      overall_position: {
+        quantity: overallQuantity,
+        cost_basis: overallCostBasis,
+        market_value: null, // Mock data doesn't include current price, so set to null
+      },
+      per_broker_positions: perBrokerPositions,
+    });
+  }),
+
+  // Asset brokers endpoint - MSW will match requests to any origin with this path
+  http.get('*/asset/brokers/:ticker', async ({ request, params }) => {
+    // Check for authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const { ticker } = params as { ticker: string };
+
+    // Filter lots by ticker
+    const filteredLots = lotsData.filter((lot) => lot.ticker === ticker);
+
+    // Return 404 if ticker not found
+    if (filteredLots.length === 0) {
+      return HttpResponse.json(
+        { detail: 'Asset not found' },
+        { status: 404 }
+      );
+    }
+
+    // Extract unique broker names
+    const brokers = Array.from(new Set(filteredLots.map((lot) => lot.broker)));
+
+    return HttpResponse.json({
+      ticker,
+      brokers,
     });
   }),
 
