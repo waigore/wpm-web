@@ -10,7 +10,7 @@ Display user's portfolio positions in a sortable table format. Shows all positio
 
 ### Visual Structure
 - Page header with title: "Portfolio Overview" or "My Portfolio"
-- Portfolio totals section (required): Single row displaying total market value, total unrealized gain/loss, and total cost basis
+- Portfolio totals section (required): Single row displaying total market value, combined P/L (unrealized and realized), and total cost basis
 - Sortable table displaying positions (server-side sorted)
 - Pagination controls (below table): Page navigation, page size selector, page info
 - Loading indicator during data fetch
@@ -30,9 +30,10 @@ PortfolioOverview
 │   │   ├── MUI Paper or MUI Card (Cost Basis)
 │   │   │   ├── MUI Typography (label: "Cost Basis")
 │   │   │   └── MUI Typography (value: {total_cost_basis}, formatted currency)
-│   │   └── MUI Paper or MUI Card (Unrealized Gain/Loss)
-│   │       ├── MUI Typography (label: "Unrealized P/L")
-│   │       └── MUI Typography (value: {total_unrealized_gain_loss}, formatted currency, colored)
+│   │   └── MUI Paper or MUI Card (P/L - Combined)
+│   │       ├── MUI Typography (label: "P/L")
+│   │       ├── MUI Typography (label: "Unrealized:", value: {total_unrealized_gain_loss}, formatted currency, colored)
+│   │       └── MUI Typography (label: "Realized:", value: {total_realized_gain_loss}, formatted currency, colored)
 │   ├── MUI CircularProgress (loading, conditionally rendered, centered)
 │   ├── MUI Alert (error, conditionally rendered, severity="error")
 │   │   ├── Error text
@@ -86,6 +87,7 @@ PortfolioOverview
 - `totalPages: number` - Total number of pages
 - `totalMarketValue: number | null` - Total market value across all positions (from API)
 - `totalUnrealizedGainLoss: number | null` - Total unrealized gain/loss across all positions (from API)
+- `totalRealizedGainLoss: number | null` - Total realized gain/loss across all positions (from API)
 - `totalCostBasis: number` - Total cost basis across all positions (from API)
 - `metadata: Record<string, AssetMetadata | null>` - Asset metadata map keyed by ticker (from `/asset/metadata/all` API)
 - `metadataLoading: boolean` - Loading state for metadata fetch (separate from positions loading)
@@ -165,6 +167,7 @@ PortfolioOverview
     },
     total_market_value: number | null,
     total_unrealized_gain_loss: number | null,
+    total_realized_gain_loss: number | null,
     total_cost_basis: number
   }
   ```
@@ -175,7 +178,7 @@ PortfolioOverview
 
 ### Service Function
 - `portfolioService.getAllPositions(params?: { page?: number, size?: number, sort_by?: string, sort_order?: 'asc' | 'desc' }): Promise<PortfolioAllResponse>`
-- Returns `PortfolioAllResponse` containing `positions` (Page_Position_), `total_market_value`, `total_unrealized_gain_loss`, and `total_cost_basis`
+- Returns `PortfolioAllResponse` containing `positions` (Page_Position_), `total_market_value`, `total_unrealized_gain_loss`, `total_realized_gain_loss`, and `total_cost_basis`
 - Includes JWT token from AuthContext in Authorization header
 - Passes query parameters to API endpoint
 
@@ -254,7 +257,7 @@ PortfolioOverview
 ### Data Validations
 - Validate API response structure
 - Validate each position has required fields
-- Handle null/undefined values gracefully (e.g., `current_price`, `market_value`, `unrealized_gain_loss` may be null)
+- Handle null/undefined values gracefully (e.g., `current_price`, `market_value`, `unrealized_gain_loss`, `realized_gain_loss` may be null)
 
 ### Display Validations
 - Format numeric values appropriately (currency, decimals)
@@ -270,7 +273,7 @@ PortfolioOverview
 5. **Cost Basis**: Field name "cost_basis" - Numerical sort
 6. **Current Price**: Field name "current_price" - Numerical sort (null handling handled by server)
 7. **Market Value**: Field name "market_value" - Numerical sort (null handling handled by server)
-8. **Unrealized Gain/Loss**: Field name "unrealized_gain_loss" - Numerical sort (null handling handled by server)
+8. **P/L**: Field name "unrealized_gain_loss" - Numerical sort (null handling handled by server). Column displays both unrealized and realized P/L values.
 9. **Allocation %**: Field name "allocation_percentage" - Numerical sort (0.00-100.00, null handling handled by server)
 
 ### Sort Behavior
@@ -348,18 +351,25 @@ PortfolioOverview
 ## Data Formatting
 
 ### Display Format
-- **Currency values** (cost_basis, market_value, unrealized_gain_loss, average_price, current_price): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
-- **Portfolio totals** (total_market_value, total_unrealized_gain_loss, total_cost_basis): Format as USD currency with 2 decimal places using `formatCurrency()` utility
+- **Currency values** (cost_basis, market_value, unrealized_gain_loss, realized_gain_loss, average_price, current_price): Format as USD currency with 2 decimal places (e.g., "$1,234.56")
+- **Portfolio totals** (total_market_value, total_unrealized_gain_loss, total_realized_gain_loss, total_cost_basis): Format as USD currency with 2 decimal places using `formatCurrency()` utility
 - **Quantity**: Display in full precision as returned from the API (arbitrary precision). The quantity should display exactly as returned from the API without decimal place constraints (e.g., "100", "0.5", "0.123456789").
 - **Allocation Percentage** (allocation_percentage): Format as percentage with 2 decimal places (e.g., "25.50%"). Value range is 0.00-100.00. Null values display as "N/A".
 - **Percentages** (if calculated): Format as percentage with 2 decimal places (e.g., "+5.23%")
-- **Null values**: Display as "N/A" or "-" (applies to total_market_value, total_unrealized_gain_loss, and allocation_percentage which may be null)
+- **Null values**: Display as "N/A" or "-" (applies to total_market_value, total_unrealized_gain_loss, total_realized_gain_loss, and allocation_percentage which may be null)
 
 ### Gain/Loss Styling
-- Positive unrealized gain: Green text/color (MUI success color)
-- Negative unrealized gain: Red text/color (MUI error color)
-- Zero or null: Default text color
-- Portfolio totals row: Unrealized gain/loss card uses color styling based on value (positive/negative/null)
+- **Unrealized P/L**: 
+  - Positive: Green text/color (MUI success color)
+  - Negative: Red text/color (MUI error color)
+  - Zero or null: Default text color
+- **Realized P/L**:
+  - Positive: Green text/color (MUI success color)
+  - Negative: Red text/color (MUI error color)
+  - Zero or null: Default text color
+  - Only displayed if non-zero (not shown if zero or null)
+- **Portfolio totals card**: P/L card displays both unrealized and realized values, each with appropriate color styling based on value (positive/negative/null)
+- **Table P/L column**: Displays both unrealized and realized P/L values, with realized only shown if non-zero. Each value styled independently with appropriate colors.
 
 ## Accessibility
 

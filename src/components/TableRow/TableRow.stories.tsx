@@ -30,6 +30,7 @@ const mockPosition = {
   current_price: 175.25,
   market_value: 17525.0,
   unrealized_gain_loss: 2475.0,
+  realized_gain_loss: 500.0,
 };
 
 export const Default: Story = {
@@ -44,7 +45,7 @@ export const Default: Story = {
           <TableCell align="right">Cost Basis</TableCell>
           <TableCell align="right">Current Price</TableCell>
           <TableCell align="right">Market Value</TableCell>
-          <TableCell align="right">Gain/Loss</TableCell>
+          <TableCell align="right">P/L</TableCell>
           <TableCell align="right">Actions</TableCell>
         </MuiTableRow>
       </TableHead>
@@ -68,6 +69,7 @@ export const MultipleRows: Story = {
         current_price: 2800.0,
         market_value: 140000.0,
         unrealized_gain_loss: 15000.0,
+        realized_gain_loss: 2000.0,
       },
       {
         ...mockPosition,
@@ -78,6 +80,7 @@ export const MultipleRows: Story = {
         current_price: 380.50,
         market_value: 28537.5,
         unrealized_gain_loss: 6037.5,
+        realized_gain_loss: null,
       },
     ];
 
@@ -92,7 +95,7 @@ export const MultipleRows: Story = {
             <TableCell align="right">Cost Basis</TableCell>
             <TableCell align="right">Current Price</TableCell>
             <TableCell align="right">Market Value</TableCell>
-            <TableCell align="right">Gain/Loss</TableCell>
+            <TableCell align="right">P/L</TableCell>
             <TableCell align="right">Actions</TableCell>
           </MuiTableRow>
         </TableHead>
@@ -122,7 +125,7 @@ export const WithMenu: Story = {
           <TableCell align="right">Cost Basis</TableCell>
           <TableCell align="right">Current Price</TableCell>
           <TableCell align="right">Market Value</TableCell>
-          <TableCell align="right">Gain/Loss</TableCell>
+          <TableCell align="right">P/L</TableCell>
           <TableCell align="right">Actions</TableCell>
         </MuiTableRow>
       </TableHead>

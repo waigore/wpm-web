@@ -28,6 +28,7 @@ const mockPosition: Position = {
   current_price: 175.25,
   market_value: 17525.0,
   unrealized_gain_loss: 2475.0,
+  realized_gain_loss: 500.0,
   allocation_percentage: 7.88,
 };
 
@@ -52,7 +53,7 @@ describe('TableRow', () => {
             <TableCell>Cost Basis</TableCell>
             <TableCell>Current Price</TableCell>
             <TableCell>Market Value</TableCell>
-            <TableCell>Gain/Loss</TableCell>
+            <TableCell>P/L</TableCell>
             <TableCell>Allocation %</TableCell>
             <TableCell>Actions</TableCell>
           </MuiTableRow>
@@ -73,6 +74,7 @@ describe('TableRow', () => {
       current_price: null,
       market_value: null,
       unrealized_gain_loss: null,
+      realized_gain_loss: null,
       allocation_percentage: null,
     };
 
@@ -148,6 +150,7 @@ describe('TableRow', () => {
     const negativePosition: Position = {
       ...mockPosition,
       unrealized_gain_loss: -100.0,
+      realized_gain_loss: -50.0,
     };
 
     const { container } = renderWithRouter(
@@ -412,6 +415,63 @@ describe('TableRow', () => {
       // Verify category shows as "unknown"
       const ariaLabel = tooltipElement.getAttribute('aria-label') || '';
       expect(ariaLabel).toContain('Category: unknown');
+    });
+  });
+
+  describe('P/L Display', () => {
+    it('displays both unrealized and realized P/L when realized is non-zero', () => {
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={mockPosition} />
+          </TableBody>
+        </Table>
+      );
+
+      // Should show unrealized P/L
+      expect(screen.getByText(/Unrealized/)).toBeInTheDocument();
+      // Should show realized P/L when non-zero
+      expect(screen.getByText(/Realized/)).toBeInTheDocument();
+    });
+
+    it('does not display realized P/L when it is zero', () => {
+      const positionWithZeroRealized: Position = {
+        ...mockPosition,
+        realized_gain_loss: 0,
+      };
+
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={positionWithZeroRealized} />
+          </TableBody>
+        </Table>
+      );
+
+      // Should show unrealized P/L
+      expect(screen.getByText(/Unrealized/)).toBeInTheDocument();
+      // Should not show realized P/L when zero
+      expect(screen.queryByText(/Realized/)).not.toBeInTheDocument();
+    });
+
+    it('does not display realized P/L when it is null', () => {
+      const positionWithNullRealized: Position = {
+        ...mockPosition,
+        realized_gain_loss: null,
+      };
+
+      renderWithRouter(
+        <Table>
+          <TableBody>
+            <TableRow position={positionWithNullRealized} />
+          </TableBody>
+        </Table>
+      );
+
+      // Should show unrealized P/L
+      expect(screen.getByText(/Unrealized/)).toBeInTheDocument();
+      // Should not show realized P/L when null
+      expect(screen.queryByText(/Realized/)).not.toBeInTheDocument();
     });
   });
 });

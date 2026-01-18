@@ -47,6 +47,7 @@ describe('usePortfolio', () => {
       total_market_value: 17525,
       total_cost_basis: 15050,
       total_unrealized_gain_loss: 2475,
+      total_realized_gain_loss: 500,
     };
 
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue(mockResponse);
@@ -65,6 +66,7 @@ describe('usePortfolio', () => {
     expect(result.current.totalMarketValue).toBe(17525);
     expect(result.current.totalCostBasis).toBe(15050);
     expect(result.current.totalUnrealizedGainLoss).toBe(2475);
+    expect(result.current.totalRealizedGainLoss).toBe(500);
   });
 
   it('should handle loading state', () => {
@@ -91,6 +93,7 @@ describe('usePortfolio', () => {
     expect(result.current.positions).toEqual([]);
     expect(result.current.totalMarketValue).toBeNull();
     expect(result.current.totalUnrealizedGainLoss).toBeNull();
+    expect(result.current.totalRealizedGainLoss).toBeNull();
     expect(result.current.totalCostBasis).toBe(0);
   });
 
@@ -106,6 +109,7 @@ describe('usePortfolio', () => {
       total_market_value: null,
       total_cost_basis: 0,
       total_unrealized_gain_loss: null,
+      total_realized_gain_loss: null,
     };
 
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue(mockResponse);
@@ -135,6 +139,7 @@ describe('usePortfolio', () => {
       total_market_value: null,
       total_cost_basis: 0,
       total_unrealized_gain_loss: null,
+      total_realized_gain_loss: null,
     };
 
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue(mockResponse);
@@ -174,6 +179,7 @@ describe('usePortfolio', () => {
       total_market_value: null,
       total_cost_basis: 0,
       total_unrealized_gain_loss: null,
+      total_realized_gain_loss: null,
     };
 
     vi.mocked(portfolioService.getAllPositions).mockResolvedValue(mockResponse);
@@ -186,6 +192,7 @@ describe('usePortfolio', () => {
 
     expect(result.current.totalMarketValue).toBeNull();
     expect(result.current.totalUnrealizedGainLoss).toBeNull();
+    expect(result.current.totalRealizedGainLoss).toBeNull();
     expect(result.current.totalCostBasis).toBe(0);
   });
 
@@ -201,6 +208,7 @@ describe('usePortfolio', () => {
       total_market_value: 100000,
       total_cost_basis: 90000,
       total_unrealized_gain_loss: 10000,
+      total_realized_gain_loss: 2000,
     };
 
     const updatedResponse = {
@@ -214,6 +222,7 @@ describe('usePortfolio', () => {
       total_market_value: 200000,
       total_cost_basis: 180000,
       total_unrealized_gain_loss: 20000,
+      total_realized_gain_loss: 4000,
     };
 
     vi.mocked(portfolioService.getAllPositions)
@@ -229,6 +238,7 @@ describe('usePortfolio', () => {
     expect(result.current.totalMarketValue).toBe(100000);
     expect(result.current.totalCostBasis).toBe(90000);
     expect(result.current.totalUnrealizedGainLoss).toBe(10000);
+    expect(result.current.totalRealizedGainLoss).toBe(2000);
 
     await result.current.refetch();
 
@@ -239,6 +249,7 @@ describe('usePortfolio', () => {
     expect(result.current.totalMarketValue).toBe(200000);
     expect(result.current.totalCostBasis).toBe(180000);
     expect(result.current.totalUnrealizedGainLoss).toBe(20000);
+    expect(result.current.totalRealizedGainLoss).toBe(4000);
   });
 
   it('should not fetch when not authenticated', () => {

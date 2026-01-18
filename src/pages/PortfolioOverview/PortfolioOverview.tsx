@@ -49,6 +49,7 @@ export const PortfolioOverview: React.FC = () => {
     error,
     totalMarketValue,
     totalUnrealizedGainLoss,
+    totalRealizedGainLoss,
     totalCostBasis,
     refetch,
   } = usePortfolio({
@@ -148,21 +149,46 @@ export const PortfolioOverview: React.FC = () => {
             }}
           >
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Unrealized P/L
+              P/L
             </Typography>
-            <Typography 
-              variant="h6" 
-              component="div"
-              sx={{
-                color: totalUnrealizedGainLoss === null 
-                  ? 'text.primary' 
-                  : totalUnrealizedGainLoss >= 0 
-                    ? 'success.main' 
-                    : 'error.main'
-              }}
-            >
-              {formatCurrency(totalUnrealizedGainLoss)}
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                <Typography variant="body2" color="text.secondary" component="span">
+                  Unrealized:
+                </Typography>
+                <Typography 
+                  variant="h6" 
+                  component="span"
+                  sx={{
+                    color: totalUnrealizedGainLoss === null 
+                      ? 'text.primary' 
+                      : totalUnrealizedGainLoss >= 0 
+                        ? 'success.main' 
+                        : 'error.main'
+                  }}
+                >
+                  {formatCurrency(totalUnrealizedGainLoss)}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                <Typography variant="body2" color="text.secondary" component="span">
+                  Realized:
+                </Typography>
+                <Typography 
+                  variant="h6" 
+                  component="span"
+                  sx={{
+                    color: totalRealizedGainLoss === null 
+                      ? 'text.primary' 
+                      : totalRealizedGainLoss >= 0 
+                        ? 'success.main' 
+                        : 'error.main'
+                  }}
+                >
+                  {formatCurrency(totalRealizedGainLoss)}
+                </Typography>
+              </Box>
+            </Box>
           </Paper>
         </Box>
       )}
@@ -265,7 +291,7 @@ export const PortfolioOverview: React.FC = () => {
                   align="right"
                   aria-sort={sortBy === 'unrealized_gain_loss' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
                 >
-                  Unrealized Gain/Loss
+                  P/L
                 </TableHeader>
                 <TableHeader
                   sortable

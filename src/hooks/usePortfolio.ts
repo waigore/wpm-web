@@ -14,6 +14,7 @@ export interface UsePortfolioReturn {
   error: string | null;
   totalMarketValue: number | null;
   totalUnrealizedGainLoss: number | null;
+  totalRealizedGainLoss: number | null;
   totalCostBasis: number;
   refetch: () => Promise<void>;
 }
@@ -29,6 +30,7 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
   const [error, setError] = useState<string | null>(null);
   const [totalMarketValue, setTotalMarketValue] = useState<number | null>(null);
   const [totalUnrealizedGainLoss, setTotalUnrealizedGainLoss] = useState<number | null>(null);
+  const [totalRealizedGainLoss, setTotalRealizedGainLoss] = useState<number | null>(null);
   const [totalCostBasis, setTotalCostBasis] = useState(0);
 
   const fetchPositions = useCallback(async () => {
@@ -53,6 +55,7 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
       setPageSize(response.positions.size || pageSize);
       setTotalMarketValue(response.total_market_value ?? null);
       setTotalUnrealizedGainLoss(response.total_unrealized_gain_loss ?? null);
+      setTotalRealizedGainLoss(response.total_realized_gain_loss ?? null);
       setTotalCostBasis(response.total_cost_basis || 0);
     } catch (err: unknown) {
       const errorMessage = extractErrorMessage(err, 'Failed to fetch portfolio positions');
@@ -60,6 +63,7 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
       setPositions([]);
       setTotalMarketValue(null);
       setTotalUnrealizedGainLoss(null);
+      setTotalRealizedGainLoss(null);
       setTotalCostBasis(0);
     } finally {
       setLoading(false);
@@ -84,6 +88,7 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
     error,
     totalMarketValue,
     totalUnrealizedGainLoss,
+    totalRealizedGainLoss,
     totalCostBasis,
     refetch,
   };

@@ -48,6 +48,7 @@ const mockPositions = [
     current_price: 175.25,
     market_value: 17525.0,
     unrealized_gain_loss: 2475.0,
+    realized_gain_loss: 500.0,
     allocation_percentage: 7.88,
   },
   {
@@ -60,6 +61,7 @@ const mockPositions = [
     current_price: 2800.0,
     market_value: 140000.0,
     unrealized_gain_loss: 15000.0,
+    realized_gain_loss: 2000.0,
     allocation_percentage: 62.96,
   },
 ];
@@ -93,6 +95,7 @@ describe('PortfolioOverview', () => {
       total_market_value: null,
       total_cost_basis: 0,
       total_unrealized_gain_loss: null,
+      total_realized_gain_loss: null,
     });
 
     renderPortfolioOverview();
@@ -114,6 +117,7 @@ describe('PortfolioOverview', () => {
       total_market_value: null,
       total_cost_basis: 0,
       total_unrealized_gain_loss: null,
+      total_realized_gain_loss: null,
     });
 
     renderPortfolioOverview();
@@ -140,6 +144,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -184,6 +189,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -192,7 +198,10 @@ describe('PortfolioOverview', () => {
       // Use getAllByText and check the first one (totals section) or query by role/container
       const marketValueLabels = screen.getAllByText('Market Value');
       expect(marketValueLabels.length).toBeGreaterThan(0);
-      expect(screen.getByText('Unrealized P/L')).toBeInTheDocument();
+      const plLabels = screen.getAllByText('P/L');
+      expect(plLabels.length).toBeGreaterThan(0);
+      expect(screen.getByText(/Unrealized:/)).toBeInTheDocument();
+      expect(screen.getByText(/Realized:/)).toBeInTheDocument();
       const costBasisLabels = screen.getAllByText('Cost Basis');
       expect(costBasisLabels.length).toBeGreaterThan(0);
     });
@@ -210,6 +219,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525.5,
       total_cost_basis: 140050.25,
       total_unrealized_gain_loss: 17475.25,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -235,20 +245,24 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
 
     await waitFor(() => {
-      const unrealizedPL = screen.getByText('Unrealized P/L');
-      // Find the Paper component containing Unrealized P/L
-      const paperElement = unrealizedPL.closest('[class*="MuiPaper-root"]');
+      const plLabels = screen.getAllByText('P/L');
+      // The first "P/L" is in the totals card
+      const plCard = plLabels[0];
+      // Find the Paper component containing P/L
+      const paperElement = plCard.closest('[class*="MuiPaper-root"]');
       expect(paperElement).toBeInTheDocument();
-      // Find the value element (h6 Typography) within the Paper
-      const valueElement = paperElement?.querySelector('[class*="MuiTypography-h6"]') as HTMLElement;
-      expect(valueElement).toBeInTheDocument();
-      // Check that the element has color styling (success color for positive)
-      const styles = window.getComputedStyle(valueElement);
+      // Find the unrealized value element (h6 Typography) within the Paper - it should be the first h6 in the box
+      const valueElements = paperElement?.querySelectorAll('[class*="MuiTypography-h6"]') as NodeListOf<HTMLElement>;
+      expect(valueElements.length).toBeGreaterThan(0);
+      // Check that at least one value element has color styling (success color for positive)
+      const firstValueElement = valueElements[0];
+      const styles = window.getComputedStyle(firstValueElement);
       expect(styles.color).toBeTruthy();
       expect(styles.color).not.toBe('rgba(0, 0, 0, 0)');
     });
@@ -266,20 +280,24 @@ describe('PortfolioOverview', () => {
       total_market_value: 100000,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: -40050,
+      total_realized_gain_loss: -1000,
     });
 
     renderPortfolioOverview();
 
     await waitFor(() => {
-      const unrealizedPL = screen.getByText('Unrealized P/L');
-      // Find the Paper component containing Unrealized P/L
-      const paperElement = unrealizedPL.closest('[class*="MuiPaper-root"]');
+      const plLabels = screen.getAllByText('P/L');
+      // The first "P/L" is in the totals card
+      const plCard = plLabels[0];
+      // Find the Paper component containing P/L
+      const paperElement = plCard.closest('[class*="MuiPaper-root"]');
       expect(paperElement).toBeInTheDocument();
-      // Find the value element (h6 Typography) within the Paper
-      const valueElement = paperElement?.querySelector('[class*="MuiTypography-h6"]') as HTMLElement;
-      expect(valueElement).toBeInTheDocument();
-      // Check that the element has color styling (error color for negative)
-      const styles = window.getComputedStyle(valueElement);
+      // Find the unrealized value element (h6 Typography) within the Paper - it should be the first h6 in the box
+      const valueElements = paperElement?.querySelectorAll('[class*="MuiTypography-h6"]') as NodeListOf<HTMLElement>;
+      expect(valueElements.length).toBeGreaterThan(0);
+      // Check that at least one value element has color styling (error color for negative)
+      const firstValueElement = valueElements[0];
+      const styles = window.getComputedStyle(firstValueElement);
       expect(styles.color).toBeTruthy();
       expect(styles.color).not.toBe('rgba(0, 0, 0, 0)');
     });
@@ -323,6 +341,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -400,6 +419,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -434,6 +454,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -474,6 +495,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -524,6 +546,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -642,6 +665,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 157525,
       total_cost_basis: 140050,
       total_unrealized_gain_loss: 17475,
+      total_realized_gain_loss: 2500,
     });
 
     renderPortfolioOverview();
@@ -731,6 +755,7 @@ describe('PortfolioOverview', () => {
       total_market_value: 200000,
       total_cost_basis: 180000,
       total_unrealized_gain_loss: 20000,
+      total_realized_gain_loss: 3000,
     };
 
     vi.mocked(portfolioService.getAllPositions)

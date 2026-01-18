@@ -112,6 +112,10 @@ export const handlers = [
     const totalUnrealizedGainLoss = sortedData.reduce((sum, pos) => {
       return sum + (pos.unrealized_gain_loss ?? 0);
     }, 0);
+    
+    const totalRealizedGainLoss = sortedData.reduce((sum, pos) => {
+      return sum + ((pos as any).realized_gain_loss ?? 0);
+    }, 0);
 
     return HttpResponse.json({
       positions: {
@@ -124,6 +128,7 @@ export const handlers = [
       total_market_value: totalMarketValue > 0 ? totalMarketValue : null,
       total_cost_basis: totalCostBasis,
       total_unrealized_gain_loss: totalUnrealizedGainLoss !== 0 ? totalUnrealizedGainLoss : null,
+      total_realized_gain_loss: totalRealizedGainLoss !== 0 ? totalRealizedGainLoss : null,
     });
   }),
 

@@ -136,14 +136,29 @@ export const TableRow: React.FC<TableRowProps> = ({ position, metadata, ...props
         <TableCell align="right">{formatCurrency(position.cost_basis)}</TableCell>
         <TableCell align="right">{formatCurrency(position.current_price)}</TableCell>
         <TableCell align="right">{formatCurrency(position.market_value)}</TableCell>
-        <TableCell
-          align="right"
-          sx={{
-            color: getGainLossColor(position.unrealized_gain_loss),
-            fontWeight: 'medium',
-          }}
-        >
-          {formatCurrency(position.unrealized_gain_loss)}
+        <TableCell align="right">
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.25 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                color: getGainLossColor(position.unrealized_gain_loss),
+                fontWeight: 'medium',
+              }}
+            >
+              {formatCurrency(position.unrealized_gain_loss)} (Unrealized)
+            </Typography>
+            {position.realized_gain_loss !== null && position.realized_gain_loss !== undefined && position.realized_gain_loss !== 0 && (
+              <Typography
+                variant="body2"
+                sx={{
+                  color: getGainLossColor(position.realized_gain_loss),
+                  fontWeight: 'medium',
+                }}
+              >
+                {formatCurrency(position.realized_gain_loss)} (Realized)
+              </Typography>
+            )}
+          </Box>
         </TableCell>
         <TableCell align="right">
           {formatNumber(position.allocation_percentage, 2) + '%'}
