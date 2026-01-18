@@ -2,6 +2,7 @@ import { DefaultService } from '../client/services/DefaultService';
 import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
+import { handle401Error } from './errorHandler';
 
 // Configure OpenAPI base URL from environment
 OpenAPI.BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -53,12 +54,17 @@ export async function getAllPositions(
   const sortBy = params?.sort_by ?? 'ticker';
   const sortOrder = params?.sort_order ?? 'asc';
 
-  return DefaultService.getAllPositionsEndpointPortfolioAllGet(
-    page,
-    size,
-    sortBy,
-    sortOrder
-  );
+  try {
+    return await DefaultService.getAllPositionsEndpointPortfolioAllGet(
+      page,
+      size,
+      sortBy,
+      sortOrder
+    );
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
 }
 
 /**
@@ -81,15 +87,20 @@ export async function getAssetTrades(
   const startDate = params?.start_date ?? null;
   const endDate = params?.end_date ?? null;
 
-  return DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet(
-    ticker,
-    page,
-    size,
-    startDate,
-    endDate,
-    sortBy,
-    sortOrder
-  );
+  try {
+    return await DefaultService.getAssetTradesEndpointPortfolioTradesTickerGet(
+      ticker,
+      page,
+      size,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder
+    );
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
 }
 
 /**
@@ -112,15 +123,20 @@ export async function getAssetLots(
   const startDate = params?.start_date ?? null;
   const endDate = params?.end_date ?? null;
 
-  return DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet(
-    ticker,
-    page,
-    size,
-    startDate,
-    endDate,
-    sortBy,
-    sortOrder
-  );
+  try {
+    return await DefaultService.getAssetLotsEndpointPortfolioLotsTickerGet(
+      ticker,
+      page,
+      size,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder
+    );
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
 }
 
 /**
@@ -138,11 +154,16 @@ export async function getPortfolioPerformance(
   const endDate = params?.end_date ?? null;
   const granularity = params?.granularity ?? 'daily';
 
-  return DefaultService.getPortfolioPerformanceEndpointPortfolioAllPerformanceGet(
-    startDate,
-    endDate,
-    granularity
-  );
+  try {
+    return await DefaultService.getPortfolioPerformanceEndpointPortfolioAllPerformanceGet(
+      startDate,
+      endDate,
+      granularity
+    );
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
 }
 
 /**
@@ -153,5 +174,10 @@ export async function getAllAssetMetadata(): Promise<AssetMetadataAllResponse> {
   // Ensure token is set in OpenAPI config (getToken already does this)
   getToken();
 
-  return DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet();
+  try {
+    return await DefaultService.getAllAssetMetadataEndpointAssetMetadataAllGet();
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
 }

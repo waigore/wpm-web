@@ -1,4 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
+import { handle401Error } from './services/errorHandler';
+import { TOKEN_KEY } from './services/authService';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -14,7 +16,7 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,11 +31,8 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Clear token on 401
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-    }
+    // Use centralized 401 error handler
+    handle401Error(error);
     return Promise.reject(error);
   }
 );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllPositions, PortfolioParams } from '../api/services/portfolioService';
 import type { Position } from '../api/client';
 import { useAuth } from './useAuth';
@@ -31,7 +31,7 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
   const [totalUnrealizedGainLoss, setTotalUnrealizedGainLoss] = useState<number | null>(null);
   const [totalCostBasis, setTotalCostBasis] = useState(0);
 
-  const fetchPositions = async () => {
+  const fetchPositions = useCallback(async () => {
     if (!isAuthenticated) {
       return;
     }
@@ -64,16 +64,15 @@ export function usePortfolio(params?: PortfolioParams): UsePortfolioReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, currentPage, pageSize, params?.page, params?.size, params?.sort_by, params?.sort_order]);
 
   useEffect(() => {
     fetchPositions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, currentPage, pageSize, params?.page, params?.size, params?.sort_by, params?.sort_order]);
+  }, [fetchPositions]);
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     await fetchPositions();
-  };
+  }, [fetchPositions]);
 
   return {
     positions,

@@ -2,8 +2,8 @@ import { DefaultService } from '../client/services/DefaultService';
 import type { LoginRequest, LoginResponse } from '../client';
 import { OpenAPI } from '../client/core/OpenAPI';
 
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+export const TOKEN_KEY = 'auth_token';
+export const USER_KEY = 'auth_user';
 
 /**
  * Login with username and password

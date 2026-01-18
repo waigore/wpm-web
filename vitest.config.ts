@@ -8,9 +8,31 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './tests/setup.ts',
+    // Suppress console warnings for act() from MUI components
+    onConsoleLog: (log, type) => {
+      // Filter out act() warnings from MUI components
+      if (
+        (type === 'warn' || type === 'error') &&
+        typeof log === 'string' &&
+        log.includes('not wrapped in act(...)') &&
+        (log.includes('ForwardRef(FormControl)') ||
+          log.includes('TestComponent') ||
+          log.includes('Login') ||
+          log.includes('FormControl') ||
+          log.includes('Mui') ||
+          log.includes('TextField') ||
+          log.includes('Input'))
+      ) {
+        return false; // Suppress this log
+      }
+      return true; // Allow other logs
+    },
+    // Filter stderr output to suppress React warnings
+    outputTruncateLength: 0,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      reportsDirectory: './coverage',
       exclude: [
         'node_modules/',
         'tests/',

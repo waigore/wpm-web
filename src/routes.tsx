@@ -4,13 +4,47 @@ import { PortfolioOverview } from './pages/PortfolioOverview/PortfolioOverview';
 import { AssetTrades } from './pages/AssetTrades/AssetTrades';
 import { AssetLots } from './pages/AssetLots/AssetLots';
 import { PortfolioPerformance } from './pages/PortfolioPerformance';
+import { SessionExpired } from './pages/SessionExpired';
 import { ProtectedLayout } from './components/ProtectedLayout/ProtectedLayout';
 import { useAuth } from './hooks/useAuth';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { SESSION_EXPIRED_FLAG, SESSION_EXPIRED_EVENT } from './api/services/errorHandler';
 
 // Protected Route component
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { isAuthenticated } = useAuth();
+  const [sessionExpired, setSessionExpired] = useState(
+    () => localStorage.getItem(SESSION_EXPIRED_FLAG) === 'true'
+  );
+  
+  // Listen for session expired events (much more efficient than polling)
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setSessionExpired(true);
+    };
+
+    // Listen for custom event
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
+    // Also listen for storage events (works across tabs)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === SESSION_EXPIRED_FLAG) {
+        setSessionExpired(e.newValue === 'true');
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
+  if (sessionExpired) {
+    // Redirect to session expired page
+    return <Navigate to="/session-expired" replace />;
+  }
+  
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
@@ -26,6 +60,14 @@ export const routes = [
     element: (
       <PublicRoute>
         <Login />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/session-expired',
+    element: (
+      <PublicRoute>
+        <SessionExpired />
       </PublicRoute>
     ),
   },

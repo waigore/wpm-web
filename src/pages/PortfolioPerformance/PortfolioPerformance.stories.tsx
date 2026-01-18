@@ -24,14 +24,14 @@ export default meta;
 type Story = StoryObj<typeof PortfolioPerformance>;
 
 /**
- * Default portfolio performance page showing performance graph with daily granularity and YTD date range.
+ * Default portfolio performance page showing performance graph with weekly granularity and portfolio start date range.
  * Uses MSW handlers for mock data. Displays line chart of portfolio total market value over time.
  */
 export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Portfolio performance page displaying a line graph of portfolio total market value over time. Default granularity is daily and default date range is YTD (Year to Date).',
+        story: 'Portfolio performance page displaying a line graph of portfolio total market value over time. Default granularity is weekly and default date range is portfolio start.',
       },
     },
   },

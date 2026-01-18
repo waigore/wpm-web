@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getPortfolioPerformance, PortfolioPerformanceParams } from '../api/services/portfolioService';
 import type { PortfolioHistoryPoint } from '../api/client';
 import { useAuth } from './useAuth';
@@ -19,7 +19,7 @@ export function usePortfolioPerformance(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchPerformance = async () => {
+  const fetchPerformance = useCallback(async () => {
     if (!isAuthenticated) {
       return;
     }
@@ -38,16 +38,15 @@ export function usePortfolioPerformance(
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, params?.start_date, params?.end_date, params?.granularity]);
 
   useEffect(() => {
     fetchPerformance();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, params?.start_date, params?.end_date, params?.granularity]);
+  }, [fetchPerformance]);
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     await fetchPerformance();
-  };
+  }, [fetchPerformance]);
 
   return {
     historyPoints,

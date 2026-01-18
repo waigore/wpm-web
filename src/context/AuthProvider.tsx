@@ -1,23 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { AuthContext, AuthContextType } from './AuthContext';
-import { getToken, getUsername, logout as authLogout } from '../api/services/authService';
+import { getToken, getUsername, logout as authLogout, TOKEN_KEY, USER_KEY } from '../api/services/authService';
 
 interface AuthProviderProps {
   children: React.ReactNode;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  // Initialize state directly from localStorage to avoid async updates in useEffect
+  const [user, setUser] = useState<string | null>(() => getUsername());
+  const [token, setToken] = useState<string | null>(() => getToken());
 
-  // Initialize from localStorage on mount
+  // Sync with localStorage changes (e.g., when token is cleared by 401 interceptor)
+  // Use storage events instead of polling for better performance
+  // Only sync on external changes, not on internal state updates
   useEffect(() => {
-    const storedToken = getToken();
-    const storedUser = getUsername();
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(storedUser);
-    }
+    const checkAuthState = () => {
+      const storedToken = getToken();
+      const storedUser = getUsername();
+      
+      // Use functional updates to access current state without dependencies
+      setToken((currentToken) => {
+        // If token was cleared from localStorage, update state
+        if (!storedToken && currentToken) {
+          setUser(() => null);
+          return null;
+        } else if (storedToken && storedToken !== currentToken) {
+          // Token was updated externally
+          setUser(() => storedUser);
+          return storedToken;
+        }
+        return currentToken;
+      });
+      
+      // Also check if user changed independently
+      setUser((currentUser) => {
+        if (storedUser && storedUser !== currentUser) {
+          return storedUser;
+        }
+        return currentUser;
+      });
+    };
+
+    // Listen for storage events (works across tabs and when localStorage is modified externally)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === TOKEN_KEY || e.key === USER_KEY) {
+        checkAuthState();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom session expired event (fired when 401 occurs)
+    const handleSessionExpired = () => {
+      checkAuthState();
+    };
+    window.addEventListener('session-expired', handleSessionExpired);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('session-expired', handleSessionExpired);
+    };
+    // Remove token and user from dependencies - we use functional updates instead
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = (newToken: string, username: string) => {

@@ -29,8 +29,8 @@ type DateRange = 'portfolio_start' | 'ytd' | '52w';
 
 export const PortfolioPerformance: React.FC = () => {
   const { isAuthenticated } = useAuth();
-  const [granularity, setGranularity] = useState<Granularity>('daily');
-  const [dateRange, setDateRange] = useState<DateRange>('ytd');
+  const [granularity, setGranularity] = useState<Granularity>('weekly');
+  const [dateRange, setDateRange] = useState<DateRange>('portfolio_start');
 
   // Calculate start_date based on dateRange
   const { startDate, endDate } = useMemo(() => {
@@ -80,7 +80,7 @@ export const PortfolioPerformance: React.FC = () => {
         dateRange,
       });
     }
-  });
+  }, [loading, error, historyPoints.length, granularity, dateRange]);
 
   const handleGranularityChange = (
     _event: React.MouseEvent<HTMLElement>,
@@ -140,7 +140,19 @@ export const PortfolioPerformance: React.FC = () => {
   }, [chartData]);
 
   // Custom tooltip formatter
-  const customTooltip = ({ active, payload }: any) => {
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        date: string;
+        total_market_value: number;
+        formattedDate: string;
+        formattedValue: string;
+      };
+    }>;
+  }
+
+  const customTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

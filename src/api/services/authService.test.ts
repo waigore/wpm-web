@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { login, logout, getToken, getUsername } from './authService';
+import { login, logout, getToken, getUsername, TOKEN_KEY, USER_KEY } from './authService';
 import { DefaultService } from '../client/services/DefaultService';
 import { OpenAPI } from '../client/core/OpenAPI';
 
@@ -50,8 +50,8 @@ describe('authService', () => {
       const result = await login('testuser', 'password123');
 
       expect(result).toEqual(mockResponse);
-      expect(localStorage.getItem('auth_token')).toBe('mock-token-123');
-      expect(localStorage.getItem('auth_user')).toBe('testuser');
+      expect(localStorage.getItem(TOKEN_KEY)).toBe('mock-token-123');
+      expect(localStorage.getItem(USER_KEY)).toBe('testuser');
       expect(OpenAPI.TOKEN).toBe('mock-token-123');
       expect(DefaultService.loginLoginPost).toHaveBeenCalledWith({
         username: 'testuser',
@@ -69,27 +69,27 @@ describe('authService', () => {
 
       await login('testuser', 'password123');
 
-      expect(localStorage.getItem('auth_token')).toBeNull();
+      expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     });
   });
 
   describe('logout', () => {
     it('should clear token and user from localStorage', () => {
-      localStorage.setItem('auth_token', 'mock-token');
-      localStorage.setItem('auth_user', 'testuser');
+      localStorage.setItem(TOKEN_KEY, 'mock-token');
+      localStorage.setItem(USER_KEY, 'testuser');
       OpenAPI.TOKEN = 'mock-token';
 
       logout();
 
-      expect(localStorage.getItem('auth_token')).toBeNull();
-      expect(localStorage.getItem('auth_user')).toBeNull();
+      expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
+      expect(localStorage.getItem(USER_KEY)).toBeNull();
       expect(OpenAPI.TOKEN).toBeUndefined();
     });
   });
 
   describe('getToken', () => {
     it('should return token from localStorage', () => {
-      localStorage.setItem('auth_token', 'mock-token-456');
+      localStorage.setItem(TOKEN_KEY, 'mock-token-456');
 
       const token = getToken();
 
@@ -104,7 +104,7 @@ describe('authService', () => {
     });
 
     it('should set OpenAPI.TOKEN when token exists', () => {
-      localStorage.setItem('auth_token', 'mock-token-789');
+      localStorage.setItem(TOKEN_KEY, 'mock-token-789');
       OpenAPI.TOKEN = undefined;
 
       getToken();
@@ -113,9 +113,19 @@ describe('authService', () => {
     });
   });
 
+  describe('constants export', () => {
+    it('should export TOKEN_KEY constant', () => {
+      expect(TOKEN_KEY).toBe('auth_token');
+    });
+
+    it('should export USER_KEY constant', () => {
+      expect(USER_KEY).toBe('auth_user');
+    });
+  });
+
   describe('getUsername', () => {
     it('should return username from localStorage', () => {
-      localStorage.setItem('auth_user', 'testuser');
+      localStorage.setItem(USER_KEY, 'testuser');
 
       const username = getUsername();
 

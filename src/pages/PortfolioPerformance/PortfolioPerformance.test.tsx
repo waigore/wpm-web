@@ -157,18 +157,22 @@ describe('PortfolioPerformance', () => {
       expect(portfolioService.getPortfolioPerformance).toHaveBeenCalled();
     });
 
-    const weeklyButton = screen.getByRole('button', { name: /weekly/i });
-    await userEvent.click(weeklyButton);
+    // Verify initial call uses weekly granularity (default)
+    const initialCall = vi.mocked(portfolioService.getPortfolioPerformance).mock.calls[0][0];
+    expect(initialCall?.granularity).toBe('weekly');
+
+    const dailyButton = screen.getByRole('button', { name: /daily/i });
+    await userEvent.click(dailyButton);
 
     await waitFor(() => {
       expect(portfolioService.getPortfolioPerformance).toHaveBeenCalledTimes(2);
     });
 
-    // Check that the second call includes weekly granularity
+    // Check that the second call includes daily granularity
     const lastCall = vi.mocked(portfolioService.getPortfolioPerformance).mock.calls[
       vi.mocked(portfolioService.getPortfolioPerformance).mock.calls.length - 1
     ][0];
-    expect(lastCall?.granularity).toBe('weekly');
+    expect(lastCall?.granularity).toBe('daily');
   });
 
   it('handles date range toggle change', async () => {
@@ -187,8 +191,12 @@ describe('PortfolioPerformance', () => {
       expect(portfolioService.getPortfolioPerformance).toHaveBeenCalled();
     });
 
-    const portfolioStartButton = screen.getByRole('button', { name: /portfolio start/i });
-    await userEvent.click(portfolioStartButton);
+    // Verify initial call uses portfolio_start date range (default)
+    const initialCall = vi.mocked(portfolioService.getPortfolioPerformance).mock.calls[0][0];
+    expect(initialCall?.start_date).toBeNull();
+
+    const ytdButton = screen.getByRole('button', { name: /year to date/i });
+    await userEvent.click(ytdButton);
 
     await waitFor(() => {
       expect(portfolioService.getPortfolioPerformance).toHaveBeenCalledTimes(2);
@@ -217,7 +225,7 @@ describe('PortfolioPerformance', () => {
     });
   });
 
-  it('calculates date range correctly for YTD', async () => {
+  it('calculates date range correctly for portfolio start (default)', async () => {
     vi.mocked(portfolioService.getPortfolioPerformance).mockResolvedValue({
       history_points: mockHistoryPoints,
     });
@@ -229,8 +237,42 @@ describe('PortfolioPerformance', () => {
     });
 
     const callArgs = vi.mocked(portfolioService.getPortfolioPerformance).mock.calls[0][0];
+    // Portfolio start should have start_date as null (API will use default)
+    expect(callArgs).toBeDefined();
+    expect(callArgs?.start_date).toBeNull();
+    expect(callArgs?.granularity).toBe('weekly');
+  });
+
+  it('calculates date range correctly for YTD', async () => {
+    vi.mocked(portfolioService.getPortfolioPerformance).mockResolvedValue({
+      history_points: mockHistoryPoints,
+    });
+
+    renderPortfolioPerformance();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Portfolio Performance/i)).toBeInTheDocument();
+    });
+
+    // Wait for initial call
+    await waitFor(() => {
+      expect(portfolioService.getPortfolioPerformance).toHaveBeenCalled();
+    });
+
+    // Click YTD button to change date range
+    const ytdButton = screen.getByRole('button', { name: /year to date/i });
+    await userEvent.click(ytdButton);
+
+    await waitFor(() => {
+      expect(portfolioService.getPortfolioPerformance).toHaveBeenCalledTimes(2);
+    });
+
+    const callArgs = vi.mocked(portfolioService.getPortfolioPerformance).mock.calls[
+      vi.mocked(portfolioService.getPortfolioPerformance).mock.calls.length - 1
+    ][0];
     // YTD should have a start_date of January 1st of current year
     expect(callArgs).toBeDefined();
+    expect(callArgs?.start_date).toBeTruthy();
     if (callArgs?.start_date) {
       const currentYear = new Date().getFullYear();
       // Account for timezone differences - the date should be January 1st of current year
@@ -243,9 +285,6 @@ describe('PortfolioPerformance', () => {
       // Also check that the year matches (allowing for year boundary due to timezone)
       const yearMatch = startDate.getFullYear() === currentYear || startDate.getFullYear() === currentYear - 1;
       expect(yearMatch).toBe(true);
-    } else {
-      // If start_date is null, that's also valid (API will use default)
-      expect(callArgs?.start_date).toBeNull();
     }
   });
 
