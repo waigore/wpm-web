@@ -18,6 +18,7 @@ import { PaginationControls } from '../../components/PaginationControls/Paginati
 import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 import { useAssetTrades } from '../../hooks/useAssetTrades';
+import { useAssetTradesAll } from '../../hooks/useAssetTradesAll';
 import { useTableSort } from '../../hooks/useTableSort';
 import { TradesGraph, TradesGraphGranularity, TradesGraphDateRange } from '../../components/TradesGraph/TradesGraph';
 import { useAssetPriceHistory } from '../../hooks/useAssetPriceHistory';
@@ -89,17 +90,17 @@ export const AssetTrades: React.FC = () => {
     end_date: endDate,
   });
 
-  const tradesForGraph = useMemo(
-    () =>
-      trades.filter((trade) => {
-        if (startDate && trade.date < startDate) {
-          return false;
-        }
-        // endDate is null (API defaults to today) so no upper bound here
-        return true;
-      }),
-    [trades, startDate]
-  );
+  const {
+    trades: allTrades,
+    loading: allTradesLoading,
+    error: allTradesError,
+    refetch: refetchAllTrades,
+  } = useAssetTradesAll(ticker || '', {
+    start_date: startDate,
+    end_date: endDate,
+    sort_by: 'date',
+    sort_order: 'asc',
+  });
 
   const handleSort = (column: SortByField) => {
     handleSortChange(column);
@@ -169,7 +170,7 @@ export const AssetTrades: React.FC = () => {
 
       {/* Trades Graph section */}
       <Box sx={{ mb: 4 }}>
-        {priceLoading && !priceError && (
+        {(priceLoading || allTradesLoading) && !priceError && !allTradesError && (
           <Box display="flex" justifyContent="center" alignItems="center" p={4}>
             <CircularProgress aria-label="Loading price data" aria-live="polite" />
           </Box>
@@ -181,12 +182,19 @@ export const AssetTrades: React.FC = () => {
           </Box>
         )}
 
-        {!priceLoading && !priceError && (
+        {allTradesError && (
+          <Box sx={{ mb: 2 }}>
+            <ErrorMessage message={allTradesError} onRetry={refetchAllTrades} />
+          </Box>
+        )}
+
+        {!priceLoading && !priceError && !allTradesLoading && !allTradesError && (
           <TradesGraph
             ticker={ticker}
             prices={prices}
             currentPrice={currentPrice}
-            trades={tradesForGraph}
+            allTrades={allTrades}
+            visibleTrades={trades}
             granularity={granularity}
             dateRange={dateRange}
             onGranularityChange={handleGranularityChange}

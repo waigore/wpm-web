@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse, AssetBrokersResponse, AssetPriceHistoryResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetTradesAllResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse, AssetBrokersResponse, AssetPriceHistoryResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import { handle401Error } from './errorHandler';
@@ -21,6 +21,13 @@ export interface AssetTradesParams {
   sort_order?: 'asc' | 'desc';
   start_date?: string;
   end_date?: string;
+}
+
+export interface AssetTradesAllParams {
+  start_date?: string | null;
+  end_date?: string | null;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
 }
 
 export interface AssetLotsParams {
@@ -98,6 +105,38 @@ export async function getAssetTrades(
       ticker,
       page,
       size,
+      startDate,
+      endDate,
+      sortBy,
+      sortOrder
+    );
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
+}
+
+/**
+ * Get all trades for a specific asset without pagination, with optional date filtering and sorting
+ * @param ticker - Asset ticker symbol
+ * @param params - Optional parameters for date filtering and sorting
+ * @returns PortfolioAssetTradesAllResponse with all trades (no pagination)
+ */
+export async function getAssetTradesAll(
+  ticker: string,
+  params?: AssetTradesAllParams
+): Promise<PortfolioAssetTradesAllResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  const startDate = params?.start_date ?? null;
+  const endDate = params?.end_date ?? null;
+  const sortBy = params?.sort_by ?? 'date';
+  const sortOrder = params?.sort_order ?? 'asc';
+
+  try {
+    return await DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet(
+      ticker,
       startDate,
       endDate,
       sortBy,

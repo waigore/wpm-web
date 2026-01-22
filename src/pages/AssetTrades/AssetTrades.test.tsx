@@ -6,6 +6,7 @@ import { AssetTrades } from './AssetTrades';
 import { AuthProvider } from '../../context/AuthProvider';
 import * as authService from '../../api/services/authService';
 import * as portfolioService from '../../api/services/portfolioService';
+import * as useAssetTradesAllHook from '../../hooks/useAssetTradesAll';
 
 // Mock dependencies
 const mockNavigate = vi.fn();
@@ -18,7 +19,12 @@ vi.mock('../../api/services/authService', () => ({
 
 vi.mock('../../api/services/portfolioService', () => ({
   getAssetTrades: vi.fn(),
+  getAssetTradesAll: vi.fn(),
   getAssetPriceHistory: vi.fn(),
+}));
+
+vi.mock('../../hooks/useAssetTradesAll', () => ({
+  useAssetTradesAll: vi.fn(),
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -81,6 +87,13 @@ describe('AssetTrades', () => {
     vi.mocked(authService.getUsername).mockReturnValue('testuser');
     // Reset useParams mock
     mockUseParams.mockReturnValue({ ticker: 'AAPL' });
+    // Set up default mock for useAssetTradesAll
+    vi.mocked(useAssetTradesAllHook.useAssetTradesAll).mockReturnValue({
+      trades: [],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
   });
 
   it('renders asset trades page', async () => {
@@ -99,6 +112,12 @@ describe('AssetTrades', () => {
       prices: [],
       current_price: null,
     } as any);
+    vi.mocked(useAssetTradesAllHook.useAssetTradesAll).mockReturnValue({
+      trades: [],
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     renderAssetTrades();
 
@@ -162,6 +181,12 @@ describe('AssetTrades', () => {
       prices: [],
       current_price: null,
     } as any);
+    vi.mocked(useAssetTradesAllHook.useAssetTradesAll).mockReturnValue({
+      trades: mockTrades,
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     renderAssetTrades();
 

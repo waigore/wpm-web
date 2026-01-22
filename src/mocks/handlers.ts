@@ -239,6 +239,98 @@ export const handlers = [
     });
   }),
 
+  // Asset trades all endpoint (no pagination) - MSW will match requests to any origin with this path
+  http.get('*/portfolio/trades/:ticker/all', async ({ request, params }) => {
+    // Check for authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const { ticker } = params as { ticker: string };
+
+    // Filter trades by ticker
+    const filteredTrades = tradesData.filter((trade) => trade.ticker === ticker);
+
+    // Return 404 if ticker not found
+    if (filteredTrades.length === 0) {
+      return HttpResponse.json(
+        { detail: 'Asset not found' },
+        { status: 404 }
+      );
+    }
+
+    // Parse query parameters
+    const url = new URL(request.url);
+    const sortBy = url.searchParams.get('sort_by') || 'date';
+    const sortOrder = url.searchParams.get('sort_order') || 'asc';
+    const startDate = url.searchParams.get('start_date');
+    const endDate = url.searchParams.get('end_date');
+
+    // Validate sort_by field
+    const validSortFields = [
+      'date',
+      'ticker',
+      'asset_type',
+      'action',
+      'order_instruction',
+      'quantity',
+      'price',
+      'broker',
+    ];
+    if (!validSortFields.includes(sortBy)) {
+      return HttpResponse.json(
+        { detail: [{ loc: ['query', 'sort_by'], msg: 'Invalid sort field', type: 'value_error' }] },
+        { status: 400 }
+      );
+    }
+
+    // Apply date filtering if provided
+    let dateFilteredTrades = filteredTrades;
+    if (startDate || endDate) {
+      dateFilteredTrades = filteredTrades.filter((trade) => {
+        const tradeDate = trade.date;
+        if (startDate && tradeDate < startDate) return false;
+        if (endDate && tradeDate > endDate) return false;
+        return true;
+      });
+    }
+
+    // Sort data
+    const sortedData = [...dateFilteredTrades].sort((a, b) => {
+      const aValue = (a as any)[sortBy];
+      const bValue = (b as any)[sortBy];
+
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      // Special handling for date field
+      if (sortBy === 'date') {
+        const aDate = new Date(aValue).getTime();
+        const bDate = new Date(bValue).getTime();
+        const comparison = aDate - bDate;
+        return sortOrder === 'asc' ? comparison : -comparison;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortOrder === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      const comparison = (aValue as number) - (bValue as number);
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    // Return all trades (no pagination)
+    return HttpResponse.json({
+      trades: sortedData,
+    });
+  }),
+
   // Asset lots endpoint - MSW will match requests to any origin with this path
   http.get('*/portfolio/lots/:ticker', async ({ request, params }) => {
     // Check for authorization header

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getAllPositions, getAssetTrades, getAssetLots, getAllAssetMetadata, getAssetPriceHistory } from './portfolioService';
+import { getAllPositions, getAssetTrades, getAssetTradesAll, getAssetLots, getAllAssetMetadata, getAssetPriceHistory } from './portfolioService';
 import { DefaultService } from '../client/services/DefaultService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import * as authService from './authService';
@@ -9,6 +9,7 @@ vi.mock('../client/services/DefaultService', () => ({
   DefaultService: {
     getAllPositionsEndpointPortfolioAllGet: vi.fn(),
     getAssetTradesEndpointPortfolioTradesTickerGet: vi.fn(),
+    getAssetTradesAllEndpointPortfolioTradesTickerAllGet: vi.fn(),
     getAssetLotsEndpointPortfolioLotsTickerGet: vi.fn(),
     getAllAssetMetadataEndpointAssetMetadataAllGet: vi.fn(),
     getAssetPriceHistoryEndpointAssetPricesTickerGet: vi.fn(),
@@ -18,6 +19,9 @@ vi.mock('../client/services/DefaultService', () => ({
 // Mock authService
 vi.mock('./authService', () => ({
   getToken: vi.fn(),
+  logout: vi.fn(),
+  TOKEN_KEY: 'auth_token',
+  USER_KEY: 'auth_user',
 }));
 
 describe('portfolioService', () => {
@@ -250,6 +254,132 @@ describe('portfolioService', () => {
         'date',
         'asc'
       );
+    });
+  });
+
+  describe('getAssetTradesAll', () => {
+    it('should fetch all trades with default parameters', async () => {
+      const mockResponse = {
+        trades: [],
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).mockResolvedValue(mockResponse);
+
+      const result = await getAssetTradesAll('AAPL');
+
+      expect(result).toEqual(mockResponse);
+      expect(result.trades).toBeDefined();
+      expect(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).toHaveBeenCalledWith(
+        'AAPL',
+        null,
+        null,
+        'date',
+        'asc'
+      );
+      expect(authService.getToken).toHaveBeenCalled();
+    });
+
+    it('should fetch all trades with custom parameters', async () => {
+      const mockResponse = {
+        trades: [
+          {
+            date: '2024-01-15',
+            ticker: 'GOOGL',
+            asset_type: 'Stock',
+            action: 'Buy',
+            order_instruction: 'limit',
+            quantity: 25.0,
+            price: 2500.0,
+            broker: 'TD Ameritrade',
+          },
+        ],
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).mockResolvedValue(mockResponse);
+
+      const result = await getAssetTradesAll('GOOGL', {
+        start_date: '2024-01-01',
+        end_date: '2024-12-31',
+        sort_by: 'price',
+        sort_order: 'desc',
+      });
+
+      expect(result).toEqual(mockResponse);
+      expect(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).toHaveBeenCalledWith(
+        'GOOGL',
+        '2024-01-01',
+        '2024-12-31',
+        'price',
+        'desc'
+      );
+    });
+
+    it('should use default values for undefined parameters', async () => {
+      const mockResponse = {
+        trades: [],
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).mockResolvedValue(mockResponse);
+
+      await getAssetTradesAll('MSFT', {
+        start_date: undefined,
+        end_date: undefined,
+        sort_by: undefined,
+        sort_order: undefined,
+      });
+
+      expect(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).toHaveBeenCalledWith(
+        'MSFT',
+        null,
+        null,
+        'date',
+        'asc'
+      );
+    });
+
+    it('should handle 401 error', async () => {
+      const error: any = new Error('Unauthorized');
+      error.status = 401;
+
+      // Mock localStorage
+      const localStorageMock = {
+        getItem: vi.fn(() => 'mock-token'),
+        removeItem: vi.fn(),
+        setItem: vi.fn(),
+      };
+      Object.defineProperty(window, 'localStorage', {
+        value: localStorageMock,
+        writable: true,
+      });
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).mockRejectedValue(error);
+
+      await expect(getAssetTradesAll('AAPL')).rejects.toThrow('Unauthorized');
+      expect(localStorageMock.removeItem).toHaveBeenCalled();
+    });
+
+    it('should handle 404 error', async () => {
+      const error: any = new Error('Not found');
+      error.status = 404;
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).mockRejectedValue(error);
+
+      await expect(getAssetTradesAll('INVALID')).rejects.toThrow('Not found');
+    });
+
+    it('should handle 500 error', async () => {
+      const error: any = new Error('Server error');
+      error.status = 500;
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetTradesAllEndpointPortfolioTradesTickerAllGet).mockRejectedValue(error);
+
+      await expect(getAssetTradesAll('AAPL')).rejects.toThrow('Server error');
     });
   });
 

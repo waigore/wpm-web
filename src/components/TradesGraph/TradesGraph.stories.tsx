@@ -65,3 +65,81 @@ export const WeeklyOneYear: Story = {
   },
 };
 
+const allTrades = [
+  ...baseTrades,
+  {
+    date: '2025-01-06',
+    ticker: 'AAPL',
+    asset_type: 'Stock',
+    action: 'Buy',
+    order_instruction: 'limit',
+    quantity: 20,
+    price: 172.5,
+    broker: 'Fidelity',
+  },
+  {
+    date: '2025-01-07',
+    ticker: 'AAPL',
+    asset_type: 'Stock',
+    action: 'Sell',
+    order_instruction: 'market',
+    quantity: 15,
+    price: 173.0,
+    broker: 'Schwab',
+  },
+];
+
+export const AllMarkersSynced: Story = {
+  args: {
+    ticker: 'AAPL',
+    prices: [
+      ...basePrices,
+      { date: '2025-01-07', price: 173.0 },
+    ] as any,
+    currentPrice: 173.0,
+    allTrades: allTrades as any,
+    visibleTrades: allTrades as any, // All trades visible
+    granularity: 'daily',
+    dateRange: 'ytd',
+    onGranularityChange: () => {},
+    onDateRangeChange: () => {},
+  },
+};
+
+export const SomeMarkersGrayed: Story = {
+  args: {
+    ticker: 'AAPL',
+    prices: [
+      ...basePrices,
+      { date: '2025-01-07', price: 173.0 },
+    ] as any,
+    currentPrice: 173.0,
+    allTrades: allTrades as any,
+    visibleTrades: baseTrades as any, // Only first 2 trades visible
+    granularity: 'daily',
+    dateRange: 'ytd',
+    onGranularityChange: () => {},
+    onDateRangeChange: () => {},
+  },
+};
+
+export const MixedState: Story = {
+  args: {
+    ticker: 'AAPL',
+    prices: [
+      ...basePrices,
+      { date: '2025-01-07', price: 173.0 },
+    ] as any,
+    currentPrice: 173.0,
+    allTrades: allTrades as any,
+    visibleTrades: [
+      baseTrades[0],
+      allTrades[2], // First trade and third trade visible
+    ] as any,
+    granularity: 'daily',
+    dateRange: 'ytd',
+    onGranularityChange: () => {},
+    onDateRangeChange: () => {},
+  },
+};
+

@@ -176,13 +176,30 @@ AssetTrades
      - 2y: `startDate = new Date(today - 730 days).toISOString().split('T')[0]`
    - `endDate` remains `null` (API defaults to today)
    - Immediately triggers price-history API call with new date range parameters
+   - Triggers refetch of all trades via `useAssetTradesAll()` with new date range
    - Recomputes which trades fall within the selected date range for marker display
    - Logs date range change at INFO level: `"Trades graph date range changed to {dateRange}"`
    - Shows loading state during API call
 
+8. **Trade Marker Display (Trades Graph)**
+   - Graph displays **all trade markers** for the asset within the selected date range (from `useAssetTradesAll()`)
+   - Markers sync with trades currently displayed in the table:
+     - **All trades visible**: Markers use existing color scheme:
+       - Buy trades below current price: Green (`#2e7d32`)
+       - Buy trades above current price: Red (`#d32f2f`)
+       - Buy trades at current price: Blue (`#1976d2`)
+       - Sell trades: Blue (`#0288d1`)
+     - **Not all trades visible**: Markers are grayed out (`#9e9e9e` or `#bdbdbd`)
+   - Trade comparison: Trades are matched by all fields (`date`, `ticker`, `action`, `quantity`, `price`, `broker`)
+   - Marker visibility updates automatically when:
+     - User navigates to different page (pagination)
+     - User changes sort order/column
+     - User changes page size
+   - Graph markers do not refetch when pagination/sorting changes (only when date range changes)
+
 ## API Calls
 
-### Endpoint
+### Endpoint 1: Paginated Trades
 - **Method**: GET
 - **Path**: `/portfolio/trades/{ticker}`
 - **Authentication**: Required (JWT token in Authorization header)
@@ -213,21 +230,55 @@ AssetTrades
 - **Response (422)**: Validation Error (invalid query parameters)
 - **Response (500)**: Server error
 
-### Service Function
+### Endpoint 2: All Trades (No Pagination)
+- **Method**: GET
+- **Path**: `/portfolio/trades/{ticker}/all`
+- **Authentication**: Required (JWT token in Authorization header)
+- **Path Parameters**:
+  - `ticker` (required, string): Asset ticker symbol
+- **Query Parameters**:
+  - `start_date` (optional, string, ISO format YYYY-MM-DD): Start date for filtering trades (inclusive)
+  - `end_date` (optional, string, ISO format YYYY-MM-DD): End date for filtering trades (inclusive)
+  - `sort_by` (optional, string, default: "date"): Field to sort by (e.g., "date", "ticker", "asset_type", "action", "order_instruction", "quantity", "price", "broker")
+  - `sort_order` (optional, string, default: "asc", pattern: "^(asc|desc)$"): Sort order
+- **Response (200)**: 
+  ```typescript
+  {
+    trades: Trade[]
+  }
+  ```
+- **Response (400)**: Bad Request (invalid date format, start_date > end_date, or invalid sort_by field)
+- **Response (401)**: Unauthorized (token expired/invalid)
+- **Response (404)**: Not Found (ticker not found)
+- **Response (422)**: Validation Error (invalid query parameters)
+- **Response (500)**: Server error
+
+### Service Functions
 - `portfolioService.getAssetTrades(ticker: string, params?: { page?: number, size?: number, sort_by?: string, sort_order?: 'asc' | 'desc', start_date?: string, end_date?: string }): Promise<PortfolioAssetTradesResponse>`
-- Returns `PortfolioAssetTradesResponse` containing `trades` (Page_Trade_)
-- Includes JWT token from AuthContext in Authorization header
-- Passes ticker as path parameter and query parameters to API endpoint
+  - Returns `PortfolioAssetTradesResponse` containing `trades` (Page_Trade_)
+  - Used for table display with pagination
+- `portfolioService.getAssetTradesAll(ticker: string, params?: { start_date?: string, end_date?: string, sort_by?: string, sort_order?: 'asc' | 'desc' }): Promise<PortfolioAssetTradesAllResponse>`
+  - Returns `PortfolioAssetTradesAllResponse` containing `trades: Trade[]` (no pagination)
+  - Used for Trades Graph to display all markers
+- Both functions include JWT token from AuthContext in Authorization header
+- Both functions pass ticker as path parameter and query parameters to API endpoint
 
 ### Data Fetching
-- Fetches data on component mount with default parameters
-- Re-fetches when:
-  - Sort parameters change (sort_by, sort_order)
-  - Pagination parameters change (page, size)
-  - Ticker changes (if navigating to different asset)
-  - Authentication state changes (if user re-authenticates)
-- Uses `useAssetTrades()` hook to manage fetching logic with parameters
-- Each API call includes current state parameters for sorting and pagination
+- **Table Data**: Fetches paginated trades on component mount with default parameters
+  - Re-fetches when:
+    - Sort parameters change (sort_by, sort_order)
+    - Pagination parameters change (page, size)
+    - Ticker changes (if navigating to different asset)
+    - Authentication state changes (if user re-authenticates)
+  - Uses `useAssetTrades()` hook to manage fetching logic with parameters
+  - Each API call includes current state parameters for sorting and pagination
+- **Graph Data**: Fetches all trades (no pagination) on component mount and when date range changes
+  - Re-fetches when:
+    - Date range changes (startDate, endDate)
+    - Ticker changes (if navigating to different asset)
+    - Authentication state changes (if user re-authenticates)
+  - Uses `useAssetTradesAll()` hook to manage fetching logic
+  - Not refetched on pagination or sorting changes (only date range affects graph)
 
 ### Error Handling
 - **400 Bad Request**: 

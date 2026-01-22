@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import type { PricePoint, Trade } from '../../api/client';
 import { formatCurrency } from '../../utils/formatters';
+import { areAllTradesVisible } from '../../utils/tradeHelpers';
 
 export type TradesGraphGranularity = 'daily' | 'weekly';
 export type TradesGraphDateRange = 'ytd' | '1y' | '2y';
@@ -26,7 +27,12 @@ export interface TradesGraphProps {
   ticker: string;
   prices: PricePoint[];
   currentPrice: number | null;
-  trades: Trade[];
+  /** @deprecated Use allTrades instead */
+  trades?: Trade[];
+  /** All trades for the asset (for displaying all markers) */
+  allTrades?: Trade[];
+  /** Trades currently visible in the table (for sync logic) */
+  visibleTrades?: Trade[];
   granularity: TradesGraphGranularity;
   dateRange: TradesGraphDateRange;
   onGranularityChange: (granularity: TradesGraphGranularity) => void;
@@ -127,11 +133,16 @@ export const TradesGraph: React.FC<TradesGraphProps> = ({
   prices,
   currentPrice,
   trades,
+  allTrades,
+  visibleTrades = [],
   granularity,
   dateRange,
   onGranularityChange,
   onDateRangeChange,
 }) => {
+  // Use allTrades if provided, otherwise fall back to trades for backward compatibility
+  const tradesForGraph = allTrades ?? trades ?? [];
+
   const chartData: ChartPoint[] = useMemo(() => {
     if (!prices || prices.length === 0) {
       return [];
@@ -151,8 +162,8 @@ export const TradesGraph: React.FC<TradesGraphProps> = ({
       basePoints = groupByWeek(prices);
     }
 
-    return attachTradesToPoints(basePoints, trades, granularity);
-  }, [prices, trades, granularity]);
+    return attachTradesToPoints(basePoints, tradesForGraph, granularity);
+  }, [prices, tradesForGraph, granularity]);
 
   const handleGranularityToggle = (
     _event: React.MouseEvent<HTMLElement>,
@@ -212,6 +223,22 @@ export const TradesGraph: React.FC<TradesGraphProps> = ({
       return null;
     }
 
+    // Check if all trades in this marker are visible in the table
+    const allVisible = areAllTradesVisible(point.trades, visibleTrades);
+
+    // If not all trades are visible, gray out the marker
+    if (!allVisible) {
+      return (
+        <g>
+          <circle cx={cx} cy={cy} r={6} fill="#9e9e9e" stroke="#fff" strokeWidth={1.5} />
+          <text x={cx} y={cy + 3} textAnchor="middle" fontSize={10} fill="#fff">
+            {point.trades.some((t) => t.action === 'Buy') ? 'B' : point.trades.some((t) => t.action === 'Sell') ? 'S' : ''}
+          </text>
+        </g>
+      );
+    }
+
+    // All trades are visible - use existing color logic
     const hasBuy = point.trades.some((t) => t.action === 'Buy');
     const hasSell = point.trades.some((t) => t.action === 'Sell');
 

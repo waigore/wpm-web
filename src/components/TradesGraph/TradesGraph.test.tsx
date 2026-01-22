@@ -74,5 +74,59 @@ describe('TradesGraph', () => {
       screen.getByText(/No price data available for the selected date range/i)
     ).toBeInTheDocument();
   });
+
+  it('uses allTrades when provided', () => {
+    const handleGranularityChange = vi.fn();
+    const handleDateRangeChange = vi.fn();
+    const allTrades = [
+      ...mockTrades,
+      {
+        date: '2025-01-04',
+        ticker: 'AAPL',
+        asset_type: 'Stock',
+        action: 'Buy',
+        order_instruction: 'limit',
+        quantity: 20,
+        price: 172.0,
+        broker: 'Fidelity',
+      },
+    ];
+
+    render(
+      <TradesGraph
+        ticker="AAPL"
+        prices={mockPrices as any}
+        currentPrice={171.1}
+        allTrades={allTrades as any}
+        visibleTrades={mockTrades as any}
+        granularity="daily"
+        dateRange="ytd"
+        onGranularityChange={handleGranularityChange}
+        onDateRangeChange={handleDateRangeChange}
+      />
+    );
+
+    expect(screen.getByText(/AAPL: Trades Graph/i)).toBeInTheDocument();
+  });
+
+  it('falls back to trades prop when allTrades not provided', () => {
+    const handleGranularityChange = vi.fn();
+    const handleDateRangeChange = vi.fn();
+
+    render(
+      <TradesGraph
+        ticker="AAPL"
+        prices={mockPrices as any}
+        currentPrice={171.1}
+        trades={mockTrades as any}
+        granularity="daily"
+        dateRange="ytd"
+        onGranularityChange={handleGranularityChange}
+        onDateRangeChange={handleDateRangeChange}
+      />
+    );
+
+    expect(screen.getByText(/AAPL: Trades Graph/i)).toBeInTheDocument();
+  });
 });
 
