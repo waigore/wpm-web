@@ -10,6 +10,7 @@ Display all trades for a specific asset (identified by ticker) in a sortable tab
 
 ### Visual Structure
 - Page header with title: "<ticker>: Trades" (e.g., "AAPL: Trades")
+- Trades Graph section showing historical price and trade markers above the trades table
 - Sortable table displaying trades (server-side sorted)
 - Pagination controls (below table): Page navigation, page size selector, page info
 - Loading indicator during data fetch
@@ -22,8 +23,32 @@ AssetTrades
 ├── MUI Container
 │   ├── MUI Box (header section)
 │   │   └── MUI Typography (variant="h4", title: "{ticker}: Trades")
-│   ├── MUI CircularProgress (loading, conditionally rendered, centered)
-│   ├── MUI Alert (error, conditionally rendered, severity="error")
+│   ├── Trades Graph section
+│   │   ├── MUI Box (control section)
+│   │   │   ├── MUI ToggleButtonGroup (granularity)
+│   │   │   │   ├── MUI ToggleButton (Daily)
+│   │   │   │   └── MUI ToggleButton (Weekly)
+│   │   │   └── MUI ToggleButtonGroup (date range)
+│   │   │       ├── MUI ToggleButton (YTD)
+│   │   │       ├── MUI ToggleButton (1y)
+│   │   │       └── MUI ToggleButton (2y)
+│   │   ├── MUI CircularProgress (loading price data, conditionally rendered, centered)
+│   │   ├── MUI Alert (error loading price data, conditionally rendered, severity="error")
+│   │   │   ├── Error text
+│   │   │   └── MUI Button (retry action)
+│   │   └── MUI Paper (Trades Graph container)
+│   │       └── Recharts ResponsiveContainer
+│   │           └── Recharts LineChart
+│   │               ├── Recharts CartesianGrid
+│   │               ├── Recharts XAxis (date, formatted as DD MMM YY)
+│   │               ├── Recharts YAxis (price, formatted as currency)
+│   │               ├── Recharts Tooltip (shows date, price, and trades)
+│   │               ├── Recharts Legend (optional)
+│   │               ├── Recharts Line (dataKey: \"price\" - historical price line)
+│   │               ├── Recharts ReferenceLine (y=current_price, dotted, label=\"Current price\")
+│   │               └── Trade markers overlaid on price line (custom dots or Scatter)
+│   ├── MUI CircularProgress (loading trades table, conditionally rendered, centered)
+│   ├── MUI Alert (error loading trades, conditionally rendered, severity="error")
 │   │   ├── Error text
 │   │   └── MUI Button (retry action)
 │   └── MUI TableContainer
@@ -56,8 +81,8 @@ AssetTrades
 
 ### Internal State
 - `trades: Trade[]` - Array of trades for current page
-- `loading: boolean` - Loading state during data fetch
-- `error: string | null` - Error message to display
+- `loading: boolean` - Loading state during trades data fetch
+- `error: string | null` - Error message to display for trades table
 - `ticker: string` - Asset ticker extracted from URL params
 - `sortBy: string` - Currently sorted column field name (default: "date")
 - `sortOrder: 'asc' | 'desc'` - Sort direction (default: "asc")
@@ -65,6 +90,14 @@ AssetTrades
 - `pageSize: number` - Number of items per page (default: 20, options: 10, 20, 50, 100)
 - `totalItems: number` - Total number of trades across all pages
 - `totalPages: number` - Total number of pages
+- `granularity: 'daily' | 'weekly'` - Selected graph granularity (default: 'weekly' or 'daily' based on UX)
+- `dateRange: 'ytd' | '1y' | '2y'` - Selected graph date range (default: 'ytd')
+- `startDate: string | null` - Calculated start date for price history and trade markers based on `dateRange`
+- `endDate: string | null` - End date for price history and trade markers (defaults to null, API uses today)
+- `pricePoints: PricePoint[]` - Historical price points for the asset from `/asset/prices/{ticker}`
+- `currentPrice: number | null` - Current market price in USD from `/asset/prices/{ticker}`
+- `priceLoading: boolean` - Loading state during price history fetch
+- `priceError: string | null` - Error message to display for Trades Graph
 
 ## Interactions
 
@@ -78,7 +111,10 @@ AssetTrades
      - Logs page load at INFO level: `"Asset trades page loaded for ticker: {ticker}"`
      - Logs component mount at DEBUG level
      - Calls `portfolioService.getAssetTrades(ticker)` with default parameters (page=1, size=20, sort_by="date", sort_order="asc") via `useAssetTrades()` hook
-     - Sets loading state to true
+     - Sets `loading` state to true for trades table
+     - Calculates initial `startDate` and `endDate` for Trades Graph based on default `dateRange` ('ytd') and `granularity` (e.g., 'weekly')
+     - Calls `portfolioService.getAssetPriceHistory(ticker)` via `useAssetPriceHistory()` hook with calculated `start_date` and `end_date`
+     - Sets `priceLoading` state to true for Trades Graph
 
 2. **Column Header Click** (server-side sorting)
    - User clicks on sortable column header
@@ -112,9 +148,37 @@ AssetTrades
 
 5. **Retry on Error**
    - User clicks retry button in error message
-   - Clears error state
-   - Retries `getAssetTrades()` API call with current state parameters (ticker, page, size, sort_by, sort_order)
-   - Logs retry attempt at INFO level: `"Retrying asset trades fetch"`
+   - For trades table error:
+     - Clears `error` state
+     - Retries `getAssetTrades()` API call with current state parameters (ticker, page, size, sort_by, sort_order)
+     - Logs retry attempt at INFO level: `"Retrying asset trades fetch"`
+   - For Trades Graph price error:
+     - Clears `priceError` state
+     - Retries `getAssetPriceHistory()` API call with current graph state parameters (ticker, start_date, end_date)
+     - Logs retry attempt at INFO level: `"Retrying asset price history fetch"`
+
+6. **Granularity Toggle (Trades Graph)**
+   - User clicks on graph granularity toggle button (Daily, Weekly)
+   - Updates `granularity` state
+   - Recalculates bucketing of price points and associated trades:
+     - **Daily**: Uses all daily price points in range and attaches trades by exact trade date
+     - **Weekly**: Groups price points into Monday-based weeks (or equivalent) and selects a representative price for each week; bucket trades into the corresponding week
+   - Immediately triggers price-history API call if implementation chooses to align with backend defaults, otherwise reuses existing `pricePoints` and recomputes buckets on the client
+   - Logs granularity change at INFO level: `"Trades graph granularity changed to {granularity}"`
+   - Shows loading state during API call (if refetched)
+
+7. **Date Range Toggle (Trades Graph)**
+   - User clicks on graph date range toggle button (YTD, 1y, 2y)
+   - Updates `dateRange` state
+   - Calculates new `startDate` based on selection:
+     - YTD: `startDate = new Date(currentYear, 0, 1).toISOString().split('T')[0]`
+     - 1y: `startDate = new Date(today - 365 days).toISOString().split('T')[0]`
+     - 2y: `startDate = new Date(today - 730 days).toISOString().split('T')[0]`
+   - `endDate` remains `null` (API defaults to today)
+   - Immediately triggers price-history API call with new date range parameters
+   - Recomputes which trades fall within the selected date range for marker display
+   - Logs date range change at INFO level: `"Trades graph date range changed to {dateRange}"`
+   - Shows loading state during API call
 
 ## API Calls
 

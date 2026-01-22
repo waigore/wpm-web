@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getAllPositions, getAssetTrades, getAssetLots, getAllAssetMetadata } from './portfolioService';
+import { getAllPositions, getAssetTrades, getAssetLots, getAllAssetMetadata, getAssetPriceHistory } from './portfolioService';
 import { DefaultService } from '../client/services/DefaultService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import * as authService from './authService';
@@ -11,6 +11,7 @@ vi.mock('../client/services/DefaultService', () => ({
     getAssetTradesEndpointPortfolioTradesTickerGet: vi.fn(),
     getAssetLotsEndpointPortfolioLotsTickerGet: vi.fn(),
     getAllAssetMetadataEndpointAssetMetadataAllGet: vi.fn(),
+    getAssetPriceHistoryEndpointAssetPricesTickerGet: vi.fn(),
   },
 }));
 
@@ -441,6 +442,61 @@ describe('portfolioService', () => {
       await getAllAssetMetadata();
 
       expect(authService.getToken).toHaveBeenCalled();
+    });
+  });
+
+  describe('getAssetPriceHistory', () => {
+    it('should fetch price history with default parameters', async () => {
+      const mockResponse = {
+        ticker: 'AAPL',
+        asset_type: 'Stock',
+        prices: [
+          { date: '2025-01-02', price: 170.25 },
+          { date: '2025-01-03', price: 171.1 },
+        ],
+        current_price: 171.1,
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetPriceHistoryEndpointAssetPricesTickerGet).mockResolvedValue(
+        mockResponse as any
+      );
+
+      const result = await getAssetPriceHistory('AAPL');
+
+      expect(result).toEqual(mockResponse);
+      expect(DefaultService.getAssetPriceHistoryEndpointAssetPricesTickerGet).toHaveBeenCalledWith(
+        'AAPL',
+        null,
+        null
+      );
+      expect(authService.getToken).toHaveBeenCalled();
+    });
+
+    it('should fetch price history with custom date range', async () => {
+      const mockResponse = {
+        ticker: 'AAPL',
+        asset_type: 'Stock',
+        prices: [],
+        current_price: null,
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getAssetPriceHistoryEndpointAssetPricesTickerGet).mockResolvedValue(
+        mockResponse as any
+      );
+
+      const result = await getAssetPriceHistory('AAPL', {
+        start_date: '2025-01-01',
+        end_date: '2025-01-31',
+      });
+
+      expect(result).toEqual(mockResponse);
+      expect(DefaultService.getAssetPriceHistoryEndpointAssetPricesTickerGet).toHaveBeenCalledWith(
+        'AAPL',
+        '2025-01-01',
+        '2025-01-31'
+      );
     });
   });
 });

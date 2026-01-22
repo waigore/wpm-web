@@ -18,6 +18,7 @@ vi.mock('../../api/services/authService', () => ({
 
 vi.mock('../../api/services/portfolioService', () => ({
   getAssetTrades: vi.fn(),
+  getAssetPriceHistory: vi.fn(),
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -92,6 +93,12 @@ describe('AssetTrades', () => {
         pages: 0,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -111,6 +118,12 @@ describe('AssetTrades', () => {
         pages: 0,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades('AAPL');
 
@@ -143,6 +156,12 @@ describe('AssetTrades', () => {
         pages: 1,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -164,6 +183,9 @@ describe('AssetTrades', () => {
     vi.mocked(portfolioService.getAssetTrades).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
+    vi.mocked(portfolioService.getAssetPriceHistory).mockImplementation(
+      () => new Promise(() => {}) // Never resolves
+    );
 
     renderAssetTrades();
 
@@ -174,6 +196,12 @@ describe('AssetTrades', () => {
   it('displays error message on error', async () => {
     const error = new Error('Failed to fetch');
     vi.mocked(portfolioService.getAssetTrades).mockRejectedValue(error);
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -192,6 +220,12 @@ describe('AssetTrades', () => {
         pages: 0,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -211,6 +245,12 @@ describe('AssetTrades', () => {
         pages: 2,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -233,6 +273,12 @@ describe('AssetTrades', () => {
         pages: 2,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -272,6 +318,12 @@ describe('AssetTrades', () => {
         pages: 1,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -290,6 +342,12 @@ describe('AssetTrades', () => {
         pages: 1,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -310,6 +368,12 @@ describe('AssetTrades', () => {
         pages: 1,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -328,6 +392,12 @@ describe('AssetTrades', () => {
         pages: 1,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 
@@ -348,6 +418,12 @@ describe('AssetTrades', () => {
         pages: 1,
       },
     });
+    vi.mocked(portfolioService.getAssetPriceHistory).mockResolvedValue({
+      ticker: 'AAPL',
+      asset_type: 'Stock',
+      prices: [],
+      current_price: null,
+    } as any);
 
     renderAssetTrades();
 

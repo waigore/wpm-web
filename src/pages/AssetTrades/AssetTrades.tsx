@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Container,
@@ -9,7 +9,6 @@ import {
   TableRow as MuiTableRow,
   TableCell as MuiTableCell,
   CircularProgress,
-  Paper,
 } from '@mui/material';
 import { Table as TableComponent } from '../../components/Table/Table';
 import { TableHeader } from '../../components/TableHeader/TableHeader';
@@ -20,6 +19,8 @@ import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 import { useAssetTrades } from '../../hooks/useAssetTrades';
 import { useTableSort } from '../../hooks/useTableSort';
+import { TradesGraph, TradesGraphGranularity, TradesGraphDateRange } from '../../components/TradesGraph/TradesGraph';
+import { useAssetPriceHistory } from '../../hooks/useAssetPriceHistory';
 import logger from '../../utils/logger';
 
 type SortByField = 'date' | 'ticker' | 'asset_type' | 'action' | 'order_instruction' | 'quantity' | 'price' | 'broker';
@@ -30,6 +31,31 @@ export const AssetTrades: React.FC = () => {
   const { sortBy, sortOrder, handleSort: handleSortChange, getSortDirection } = useTableSort<SortByField>('date');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [granularity, setGranularity] = useState<TradesGraphGranularity>('weekly');
+  const [dateRange, setDateRange] = useState<TradesGraphDateRange>('ytd');
+
+  const { startDate, endDate } = useMemo(() => {
+    const today = new Date();
+    let calculatedStartDate: string | null = null;
+
+    if (dateRange === 'ytd') {
+      const yearStart = new Date(today.getFullYear(), 0, 1);
+      calculatedStartDate = yearStart.toISOString().split('T')[0];
+    } else if (dateRange === '1y') {
+      const oneYearAgo = new Date(today);
+      oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+      calculatedStartDate = oneYearAgo.toISOString().split('T')[0];
+    } else if (dateRange === '2y') {
+      const twoYearsAgo = new Date(today);
+      twoYearsAgo.setDate(twoYearsAgo.getDate() - 730);
+      calculatedStartDate = twoYearsAgo.toISOString().split('T')[0];
+    }
+
+    return {
+      startDate: calculatedStartDate,
+      endDate: null,
+    };
+  }, [dateRange]);
 
   useEffect(() => {
     if (isAuthenticated && ticker) {
@@ -52,6 +78,29 @@ export const AssetTrades: React.FC = () => {
     sort_order: sortOrder,
   });
 
+  const {
+    prices,
+    currentPrice,
+    loading: priceLoading,
+    error: priceError,
+    refetch: refetchPrices,
+  } = useAssetPriceHistory(ticker || '', {
+    start_date: startDate,
+    end_date: endDate,
+  });
+
+  const tradesForGraph = useMemo(
+    () =>
+      trades.filter((trade) => {
+        if (startDate && trade.date < startDate) {
+          return false;
+        }
+        // endDate is null (API defaults to today) so no upper bound here
+        return true;
+      }),
+    [trades, startDate]
+  );
+
   const handleSort = (column: SortByField) => {
     handleSortChange(column);
     setCurrentPage(1); // Reset to first page on sort
@@ -73,6 +122,21 @@ export const AssetTrades: React.FC = () => {
   const handleRetry = async () => {
     logger.info('Retrying asset trades fetch', { context: 'AssetTrades' });
     await refetch();
+  };
+
+  const handleRetryPrices = async () => {
+    logger.info('Retrying asset price history fetch', { context: 'AssetTrades' });
+    await refetchPrices();
+  };
+
+  const handleGranularityChange = (newGranularity: TradesGraphGranularity) => {
+    setGranularity(newGranularity);
+    logger.info(`Trades graph granularity changed to ${newGranularity}`, { context: 'AssetTrades' });
+  };
+
+  const handleDateRangeChange = (newDateRange: TradesGraphDateRange) => {
+    setDateRange(newDateRange);
+    logger.info(`Trades graph date range changed to ${newDateRange}`, { context: 'AssetTrades' });
   };
 
   useEffect(() => {
@@ -102,6 +166,34 @@ export const AssetTrades: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         {ticker}: Trades
       </Typography>
+
+      {/* Trades Graph section */}
+      <Box sx={{ mb: 4 }}>
+        {priceLoading && !priceError && (
+          <Box display="flex" justifyContent="center" alignItems="center" p={4}>
+            <CircularProgress aria-label="Loading price data" aria-live="polite" />
+          </Box>
+        )}
+
+        {priceError && (
+          <Box sx={{ mb: 2 }}>
+            <ErrorMessage message={priceError} onRetry={handleRetryPrices} />
+          </Box>
+        )}
+
+        {!priceLoading && !priceError && (
+          <TradesGraph
+            ticker={ticker}
+            prices={prices}
+            currentPrice={currentPrice}
+            trades={tradesForGraph}
+            granularity={granularity}
+            dateRange={dateRange}
+            onGranularityChange={handleGranularityChange}
+            onDateRangeChange={handleDateRangeChange}
+          />
+        )}
+      </Box>
 
       {loading && (
         <Box display="flex" justifyContent="center" alignItems="center" p={4}>

@@ -86,3 +86,27 @@ export function formatDate(dateString: string | null | undefined): string {
   }
 }
 
+/**
+ * Format an ISO date string (YYYY-MM-DD) to short DD MMM YY format
+ * @param dateString - ISO date string (YYYY-MM-DD)
+ * @returns Formatted short date string (e.g., "05 Jan 26")
+ */
+export function formatShortDate(dateString: string | null | undefined): string {
+  if (!dateString) {
+    return 'N/A';
+  }
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: '2-digit',
+    }).format(date);
+  } catch {
+    return dateString;
+  }
+}
+

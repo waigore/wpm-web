@@ -5,6 +5,7 @@ import tradesData from './data/trades.json';
 import lotsData from './data/lots.json';
 import performanceData from './data/portfolio-performance.json';
 import assetMetadataData from './data/asset-metadata.json';
+import assetPricesData from './data/asset-prices.json';
 
 // Mock JWT token generator (simple implementation for development)
 function generateMockToken(username: string): string {
@@ -502,6 +503,61 @@ export const handlers = [
 
     // Return mock metadata response
     return HttpResponse.json(assetMetadataData);
+  }),
+
+  // Asset price history endpoint - MSW will match requests to any origin with this path
+  http.get('*/asset/prices/:ticker', async ({ request, params }) => {
+    // Check for authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const { ticker } = params as { ticker: string };
+
+    // Find price history for ticker
+    const assetPrices = assetPricesData.find((entry) => entry.ticker === ticker);
+
+    // Return 404 if ticker not found
+    if (!assetPrices) {
+      return HttpResponse.json(
+        { detail: 'Asset not found' },
+        { status: 404 }
+      );
+    }
+
+    // Parse query parameters
+    const url = new URL(request.url);
+    const startDate = url.searchParams.get('start_date');
+    const endDate = url.searchParams.get('end_date');
+
+    // Filter prices by date range if provided
+    let filteredPrices = assetPrices.prices;
+    if (startDate || endDate) {
+      filteredPrices = assetPrices.prices.filter((point) => {
+        const pointDate = point.date;
+        if (startDate && pointDate < startDate) return false;
+        if (endDate && pointDate > endDate) return false;
+        return true;
+      });
+    }
+
+    // Sort by date ascending
+    const sortedPrices = [...filteredPrices].sort((a, b) => {
+      const aDate = new Date(a.date).getTime();
+      const bDate = new Date(b.date).getTime();
+      return aDate - bDate;
+    });
+
+    return HttpResponse.json({
+      ticker: assetPrices.ticker,
+      asset_type: assetPrices.asset_type,
+      prices: sortedPrices,
+      current_price: assetPrices.current_price ?? null,
+    });
   }),
 ];
 

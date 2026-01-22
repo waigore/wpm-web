@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse, AssetBrokersResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse, AssetBrokersResponse, AssetPriceHistoryResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import { handle401Error } from './errorHandler';
@@ -37,6 +37,11 @@ export interface PortfolioPerformanceParams {
   start_date?: string | null;
   end_date?: string | null;
   granularity?: 'daily' | 'weekly' | 'monthly';
+}
+
+export interface AssetPriceHistoryParams {
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 /**
@@ -162,6 +167,34 @@ export async function getPortfolioPerformance(
       startDate,
       endDate,
       granularity
+    );
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
+}
+
+/**
+ * Get historical price data for a specific asset
+ * @param ticker - Asset ticker symbol
+ * @param params - Optional parameters for date range
+ * @returns AssetPriceHistoryResponse with historical prices and current price
+ */
+export async function getAssetPriceHistory(
+  ticker: string,
+  params?: AssetPriceHistoryParams
+): Promise<AssetPriceHistoryResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  const startDate = params?.start_date ?? null;
+  const endDate = params?.end_date ?? null;
+
+  try {
+    return await DefaultService.getAssetPriceHistoryEndpointAssetPricesTickerGet(
+      ticker,
+      startDate,
+      endDate
     );
   } catch (error: unknown) {
     handle401Error(error);

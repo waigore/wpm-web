@@ -81,5 +81,6 @@ describe('formatters', () => {
       expect(formatQuantity(0)).toBe('0');
     });
   });
+
 });
 
