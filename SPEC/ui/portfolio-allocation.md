@@ -1,10 +1,10 @@
 # Portfolio Allocation Page Specification
 
 ## Component Name
-PortfolioAllocation - Portfolio allocation visualization page with 2-tier nested pie chart
+PortfolioAllocation - Portfolio allocation visualization page with 2-tier nested pie chart and treemap views
 
 ## Purpose
-Display portfolio allocation as a 2-tier nested pie chart showing asset type allocation (inner ring) and individual asset allocation (outer ring). Supports filtering by asset types and tickers with immediate chart updates. This is a detail page navigable from Portfolio Overview.
+Display portfolio allocation as either a 2-tier nested pie chart or a treemap visualization. Both views show asset type allocation and individual asset allocation. Supports filtering by asset types and tickers with immediate chart updates. Users can toggle between pie chart and treemap views. This is a detail page navigable from Portfolio Overview.
 
 ## Layout
 
@@ -14,9 +14,18 @@ Display portfolio allocation as a 2-tier nested pie chart showing asset type all
 - Filter section with two multi-select controls:
   - Asset type filter: Multi-select checkboxes or autocomplete (Stock, ETF, Crypto, etc.)
   - Ticker filter: Multi-select autocomplete with search capability
-- 2-tier nested pie chart:
-  - Inner ring: Asset types (Stock, ETF, Crypto, etc.) with percentages
-  - Outer ring: Individual assets (tickers) grouped by asset type with percentages
+- View toggle section:
+  - Toggle button group to switch between "Pie Chart" and "Treemap" views
+- Visualization (conditional based on selected view):
+  - Pie Chart view: 2-tier nested pie chart
+    - Inner ring: Asset types (Stock, ETF, Crypto, etc.) with percentages
+    - Outer ring: Individual assets (tickers) grouped by asset type with percentages
+  - Treemap view: Hierarchical treemap
+    - Parent nodes: Asset types (Stock, ETF, Crypto, etc.)
+    - Leaf nodes: Individual assets (tickers) within each asset type
+    - Cell size proportional to market value
+- Legend (shared for both views):
+  - Asset type labels with colors and percentages
 - Loading indicator during data fetch
 - Error message display area (conditionally visible)
 - Empty state when no assets match filters
@@ -37,24 +46,38 @@ PortfolioAllocation
 │   │   │   ├── MUI Typography (variant="body2", label: "Tickers")
 │   │   │   └── MUI Autocomplete (multi-select for tickers with search)
 │   │   │       └── MUI Checkbox (for each option)
+│   ├── MUI Box (view toggle section)
+│   │   ├── MUI Typography (variant="body2", label: "View")
+│   │   └── MUI ToggleButtonGroup (view mode selection)
+│   │       ├── MUI ToggleButton (value: "pie", label: "Pie Chart")
+│   │       └── MUI ToggleButton (value: "treemap", label: "Treemap")
 │   ├── MUI CircularProgress (loading, conditionally rendered, centered)
 │   ├── ErrorMessage component (error, conditionally rendered)
 │   │   ├── Error text
 │   │   └── MUI Button (retry action)
 │   └── MUI Paper (chart container)
 │       ├── MUI Typography (variant="h6", chart title: "Portfolio Allocation")
-│       └── AllocationPieChart component
-│           └── Recharts ResponsiveContainer
-│               ├── Recharts PieChart (inner ring - asset types)
-│               │   ├── Recharts Pie (dataKey: "value", innerRadius: 0, outerRadius: "60%")
-│               │   ├── Recharts Cell (color per asset type)
-│               │   ├── Recharts Label (asset type name)
-│               │   └── Recharts Tooltip (custom tooltip for asset types)
-│               └── Recharts PieChart (outer ring - individual assets)
-│                   ├── Recharts Pie (dataKey: "value", innerRadius: "65%", outerRadius: "100%")
-│                   ├── Recharts Cell (color per asset, grouped by type)
-│                   ├── Recharts Label (ticker symbol)
-│                   └── Recharts Tooltip (custom tooltip with full asset details)
+│       ├── Conditional rendering based on viewMode:
+│       │   ├── If viewMode === "pie": AllocationPieChart component
+│       │   │   └── Recharts ResponsiveContainer
+│       │   │       ├── Recharts PieChart (inner ring - asset types)
+│       │   │       │   ├── Recharts Pie (dataKey: "value", innerRadius: 0, outerRadius: "60%")
+│       │   │       │   ├── Recharts Cell (color per asset type)
+│       │   │       │   ├── Recharts Label (asset type name)
+│       │   │       │   └── Recharts Tooltip (custom tooltip for asset types)
+│       │   │       └── Recharts PieChart (outer ring - individual assets)
+│       │   │           ├── Recharts Pie (dataKey: "value", innerRadius: "65%", outerRadius: "100%")
+│       │   │           ├── Recharts Cell (color per asset, grouped by type)
+│       │   │           ├── Recharts Label (ticker symbol)
+│       │   │           └── Recharts Tooltip (custom tooltip with full asset details)
+│       │   └── If viewMode === "treemap": AllocationTreemap component
+│       │       └── Recharts ResponsiveContainer
+│       │           └── Recharts Treemap
+│       │               ├── Recharts Cell (color per asset type, nested structure)
+│       │               ├── Recharts Custom Content (ticker labels and percentages)
+│       │               └── Recharts Tooltip (custom tooltip with full asset details)
+│       └── Legend (shared for both views)
+│           └── Asset type labels with colors and percentages
 ```
 
 ## Props
@@ -70,6 +93,7 @@ PortfolioAllocation
 - `selectedTickers: string[]` - Selected tickers for filtering (default: empty array = show all)
 - `allAvailableAssetTypes: string[]` - All unique asset types fetched once on mount (static, for filter options)
 - `allAvailableTickers: string[]` - All tickers fetched once on mount (static, for filter options)
+- `viewMode: 'pie' | 'treemap'` - Selected visualization view (default: 'pie')
 
 ## Interactions
 
@@ -111,16 +135,29 @@ PortfolioAllocation
    - Resets to show all assets
    - Triggers API call with no filter parameters
 
-5. **Retry on Error**
+5. **View Mode Toggle**
+   - User clicks toggle button to switch between "Pie Chart" and "Treemap" views
+   - Updates `viewMode` state
+   - Immediately switches visualization without API call (uses same filtered data)
+   - Logs view change at INFO level: `"View mode changed to {viewMode}"`
+   - Both views display the same filtered data
+
+6. **Retry on Error**
    - User clicks retry button in error message
    - Clears error state
    - Retries `getPortfolioAllocation()` API call with current filter parameters
    - Logs retry attempt at INFO level: `"Retrying portfolio allocation fetch"`
 
-6. **Pie Chart Hover**
+7. **Pie Chart Hover** (when viewMode === "pie")
    - User hovers over inner ring segment (asset type)
    - Shows tooltip with asset type name and total value/percentage
    - User hovers over outer ring segment (individual asset)
+   - Shows detailed tooltip with all asset information
+
+8. **Treemap Hover** (when viewMode === "treemap")
+   - User hovers over parent node (asset type)
+   - Shows tooltip with asset type name and total value/percentage
+   - User hovers over leaf node (individual asset)
    - Shows detailed tooltip with all asset information
 
 ## API Calls
@@ -218,6 +255,41 @@ PortfolioAllocation
 - Handle empty assets array with empty state message
 - Validate filter selections don't result in empty data (show warning if needed)
 
+## Treemap Configuration
+
+### Hierarchical Structure
+- Level 1: Asset Types (parent nodes)
+  - `name`: Asset type name (e.g., "Stock", "ETF", "Crypto")
+  - `value`: Sum of market_value for all assets of this type
+  - `children`: Array of individual asset nodes
+  - Color: Consistent color per asset type (same as pie chart)
+- Level 2: Individual Assets (leaf nodes)
+  - `name`: Ticker symbol (e.g., "AAPL", "MSFT")
+  - `value`: market_value for this asset
+  - `asset`: Full AllocationPosition object for tooltip access
+  - Color: Same as parent asset type (for visual grouping)
+
+### Data Transformation
+- Group assets by `asset_type` to create parent nodes
+- Sum `market_value` for each asset type
+- Create child nodes for each asset within its type
+- Calculate percentages: `(asset_value / total_filtered_value) * 100`
+- Sort asset types by total value (descending)
+- Sort assets within each type by value (descending)
+
+### Cell Rendering
+- Display ticker symbol prominently
+- Show allocation percentage
+- Use sufficient font size for readability
+- Ensure text contrast against background color
+
+### Color Mapping
+- Use same color scheme as pie chart (`ASSET_TYPE_COLORS`)
+- Parent nodes (asset types): Base color
+- Leaf nodes (individual assets): Same color as parent (for grouping)
+- Ensure sufficient contrast for accessibility
+- Use MUI theme colors where possible
+
 ## Pie Chart Configuration
 
 ### Inner Ring (Asset Types)
@@ -296,6 +368,7 @@ Displays in this order:
 ### Internal Events
 - `onAssetTypesChange(types: string[])`: Updates selectedAssetTypes state and triggers API call
 - `onTickersChange(tickers: string[])`: Updates selectedTickers state and triggers API call
+- `onViewModeChange(mode: 'pie' | 'treemap')`: Updates viewMode state and switches visualization
 - `onRetry()`: Retries API call with current filter parameters
 
 ### External Events
@@ -320,25 +393,29 @@ Displays in this order:
 ## Accessibility
 
 ### ARIA Labels
-- Chart container: `aria-label="Portfolio allocation pie chart"`
-- Inner ring: `aria-label="Asset type allocation"`
-- Outer ring: `aria-label="Individual asset allocation"`
+- Chart container: `aria-label="Portfolio allocation {viewMode} chart"` (dynamic based on viewMode)
+- Pie chart inner ring: `aria-label="Asset type allocation"`
+- Pie chart outer ring: `aria-label="Individual asset allocation"`
+- Treemap: `aria-label="Portfolio allocation treemap"`
+- View toggle: `aria-label="Select visualization view"`
 - Asset type filter: `aria-label="Filter by asset types"`
 - Ticker filter: `aria-label="Filter by ticker symbols"`
 - Loading spinner: `aria-label="Loading allocation data"`, `aria-live="polite"`
 - Error message: `role="alert"`, `aria-live="assertive"`
 
 ### Keyboard Navigation
-- Tab order: Asset type filter → Ticker filter → Chart (if interactive) → Retry button (if visible)
+- Tab order: Asset type filter → Ticker filter → View toggle → Chart (if interactive) → Retry button (if visible)
+- View toggle supports keyboard navigation (Arrow keys to switch, Enter to select)
 - Autocomplete components support keyboard navigation (Arrow keys, Enter to select, Escape to close)
 - Chart segments accessible via keyboard (if supported by recharts)
 - Tooltip accessible via keyboard focus
 
 ### Screen Reader Support
 - Filter changes announced: "Asset type filter changed to {types}", "Ticker filter changed to {tickers}"
+- View mode changes announced: "View mode changed to {viewMode}"
 - Loading state announced: "Loading allocation data"
 - Error messages announced immediately
-- Chart data described: "Portfolio allocation showing {count} assets across {count} asset types"
+- Chart data described: "Portfolio allocation showing {count} assets across {count} asset types in {viewMode} view"
 - Tooltip content read when segment is focused
 
 ## Performance Considerations
@@ -354,9 +431,11 @@ Displays in this order:
 - Page uses MUI `Container` for consistent page width and margins
 - Header uses MUI `Typography` with variant="h4"
 - Filters use MUI `Autocomplete` with `multiple` prop and `Checkbox` renderOption
+- View toggle uses MUI `ToggleButtonGroup` with `ToggleButton` components
 - Chart container uses MUI `Paper` for elevation and styling
 - Loading state: MUI `CircularProgress` centered using MUI `Box` with flexbox centering
 - Error messages use ErrorMessage component (MUI Alert wrapper)
 - Tooltips use MUI `Paper` with elevation for visual separation
 - Uses MUI spacing and theme system for consistent styling throughout
 - Recharts components styled to match MUI theme colors
+- Both pie chart and treemap use consistent color scheme and styling

@@ -5,10 +5,13 @@ import {
   Box,
   CircularProgress,
   Paper,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { ErrorMessage } from '../../components/ErrorMessage/ErrorMessage';
 import { AllocationPieChart } from '../../components/AllocationPieChart/AllocationPieChart';
+import { AllocationTreemap } from '../../components/AllocationTreemap/AllocationTreemap';
 import { AllocationFilters } from '../../components/AllocationFilters/AllocationFilters';
 import { useAuth } from '../../hooks/useAuth';
 import { usePortfolioAllocation } from '../../hooks/usePortfolioAllocation';
@@ -20,6 +23,7 @@ export const PortfolioAllocation: React.FC = () => {
   const [selectedTickers, setSelectedTickers] = useState<string[]>([]);
   const [allAvailableAssetTypes, setAllAvailableAssetTypes] = useState<string[]>([]);
   const [allAvailableTickers, setAllAvailableTickers] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'pie' | 'treemap'>('pie');
 
   // Fetch all options once on mount (no filters) - separate from filtered data
   const { assets: allAssets } = usePortfolioAllocation({});
@@ -63,9 +67,10 @@ export const PortfolioAllocation: React.FC = () => {
         assetCount: assets.length,
         selectedAssetTypes,
         selectedTickers,
+        viewMode,
       });
     }
-  }, [loading, error, assets.length, selectedAssetTypes, selectedTickers]);
+  }, [loading, error, assets.length, selectedAssetTypes, selectedTickers, viewMode]);
 
   const handleAssetTypesChange = (types: string[]) => {
     setSelectedAssetTypes(types);
@@ -79,6 +84,18 @@ export const PortfolioAllocation: React.FC = () => {
     logger.info(`Ticker filter changed: ${tickers.join(', ')}`, {
       context: 'PortfolioAllocation',
     });
+  };
+
+  const handleViewModeChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newViewMode: 'pie' | 'treemap' | null
+  ) => {
+    if (newViewMode !== null) {
+      setViewMode(newViewMode);
+      logger.info(`View mode changed to ${newViewMode}`, {
+        context: 'PortfolioAllocation',
+      });
+    }
   };
 
   const handleRetry = async () => {
@@ -110,6 +127,27 @@ export const PortfolioAllocation: React.FC = () => {
         onTickersChange={handleTickersChange}
       />
 
+      {/* View Toggle Section */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          View
+        </Typography>
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={handleViewModeChange}
+          aria-label="Select visualization view"
+          size="small"
+        >
+          <ToggleButton value="pie" aria-label="Pie chart view">
+            Pie Chart
+          </ToggleButton>
+          <ToggleButton value="treemap" aria-label="Treemap view">
+            Treemap
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
       {/* Loading State */}
       {loading && (
         <Box display="flex" justifyContent="center" alignItems="center" p={4}>
@@ -139,7 +177,11 @@ export const PortfolioAllocation: React.FC = () => {
                 Portfolio Allocation
               </Typography>
               <Box sx={{ mt: 2, mb: 3 }}>
-                <AllocationPieChart assets={assets} />
+                {viewMode === 'pie' ? (
+                  <AllocationPieChart assets={assets} />
+                ) : (
+                  <AllocationTreemap assets={assets} />
+                )}
               </Box>
             </>
           )}

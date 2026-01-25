@@ -467,4 +467,237 @@ describe('PortfolioAllocation', () => {
       { timeout: 3000 }
     );
   });
+
+  it('renders view toggle control', async () => {
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValue({
+      assets: mockAssets,
+    });
+
+    renderPortfolioAllocation();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Select visualization view')).toBeInTheDocument();
+    });
+
+    // Check that both toggle buttons are present - use getByText as fallback
+    await waitFor(() => {
+      const pieButton = screen.getByText('Pie Chart').closest('button');
+      const treemapButton = screen.getByText('Treemap').closest('button');
+      expect(pieButton).toBeInTheDocument();
+      expect(treemapButton).toBeInTheDocument();
+    });
+  });
+
+  it('defaults to pie chart view', async () => {
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValue({
+      assets: mockAssets,
+    });
+
+    const { container } = renderPortfolioAllocation();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Portfolio Allocation/i })).toBeInTheDocument();
+    });
+
+    // Pie chart should be rendered by default
+    await waitFor(() => {
+      const chartContainer = container.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    });
+
+    // Pie chart button should be selected - use getByText as fallback
+    await waitFor(() => {
+      const pieButton = screen.getByText('Pie Chart').closest('button');
+      expect(pieButton).toBeInTheDocument();
+      expect(pieButton).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
+  it('switches to treemap view when toggle is clicked', async () => {
+    const user = userEvent.setup();
+    
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValue({
+      assets: mockAssets,
+    });
+
+    const { container } = renderPortfolioAllocation();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Portfolio Allocation/i })).toBeInTheDocument();
+    });
+
+    // Wait for toggle buttons to be available - use getByText as fallback
+    let treemapButton: HTMLElement;
+    await waitFor(() => {
+      const button = screen.getByText('Treemap').closest('button');
+      expect(button).toBeInTheDocument();
+      treemapButton = button as HTMLElement;
+    });
+
+    // Click treemap toggle button
+    await user.click(treemapButton!);
+
+    // Treemap should now be rendered
+    await waitFor(() => {
+      const chartContainer = container.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    });
+
+    // Treemap button should be selected
+    await waitFor(() => {
+      expect(treemapButton!).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
+
+  it('switches back to pie chart view from treemap', async () => {
+    const user = userEvent.setup();
+    
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValue({
+      assets: mockAssets,
+    });
+
+    const { container } = renderPortfolioAllocation();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Portfolio Allocation/i })).toBeInTheDocument();
+    });
+
+    // Wait for toggle buttons to be available - use getByText as fallback
+    let treemapButton: HTMLElement;
+    let pieButton: HTMLElement;
+    await waitFor(() => {
+      const treemapBtn = screen.getByText('Treemap').closest('button');
+      const pieBtn = screen.getByText('Pie Chart').closest('button');
+      expect(treemapBtn).toBeInTheDocument();
+      expect(pieBtn).toBeInTheDocument();
+      treemapButton = treemapBtn as HTMLElement;
+      pieButton = pieBtn as HTMLElement;
+    });
+
+    // Switch to treemap first
+    await user.click(treemapButton!);
+
+    await waitFor(() => {
+      expect(treemapButton!).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    // Switch back to pie chart
+    await user.click(pieButton!);
+
+    // Pie chart button should be selected
+    await waitFor(() => {
+      expect(pieButton!).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    // Chart should still be rendered
+    await waitFor(() => {
+      const chartContainer = container.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    });
+  });
+
+  it('both views display the same filtered data', async () => {
+    const user = userEvent.setup();
+    
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValue({
+      assets: mockAssets,
+    });
+
+    renderPortfolioAllocation();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Portfolio Allocation/i })).toBeInTheDocument();
+    });
+
+    // Filter to show only AAPL
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValueOnce({
+      assets: mockAssets.filter((a) => a.ticker === 'AAPL'),
+    });
+
+    const tickerInput = screen.getByLabelText('Filter by ticker symbols');
+    await user.click(tickerInput);
+    await user.type(tickerInput, 'AAPL');
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole('option', { name: 'AAPL' })).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+
+    const aaplOption = screen.getByRole('option', { name: 'AAPL' });
+    await user.click(aaplOption);
+
+    // Wait for filtered data to load
+    await waitFor(() => {
+      const chartContainer = document.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    });
+
+    // Switch to treemap view - should show same filtered data
+    let treemapButton: HTMLElement;
+    await waitFor(() => {
+      const button = screen.getByText('Treemap').closest('button');
+      expect(button).toBeInTheDocument();
+      treemapButton = button as HTMLElement;
+    });
+    await user.click(treemapButton!);
+
+    // Treemap should still be rendered with filtered data
+    await waitFor(() => {
+      const chartContainer = document.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    });
+  });
+
+  it('maintains view mode when filters change', async () => {
+    const user = userEvent.setup();
+    
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValue({
+      assets: mockAssets,
+    });
+
+    renderPortfolioAllocation();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /Portfolio Allocation/i })).toBeInTheDocument();
+    });
+
+    // Switch to treemap view
+    let treemapButton: HTMLElement;
+    await waitFor(() => {
+      const button = screen.getByText('Treemap').closest('button');
+      expect(button).toBeInTheDocument();
+      treemapButton = button as HTMLElement;
+    });
+    await user.click(treemapButton!);
+
+    await waitFor(() => {
+      expect(treemapButton!).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    // Change filter - view mode should remain treemap
+    vi.mocked(portfolioService.getPortfolioAllocation).mockResolvedValueOnce({
+      assets: mockAssets.filter((a) => a.ticker === 'AAPL'),
+    });
+
+    const tickerInput = screen.getByLabelText('Filter by ticker symbols');
+    await user.click(tickerInput);
+    await user.type(tickerInput, 'AAPL');
+
+    await waitFor(
+      () => {
+        expect(screen.getByRole('option', { name: 'AAPL' })).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+
+    const aaplOption = screen.getByRole('option', { name: 'AAPL' });
+    await user.click(aaplOption);
+
+    // View mode should still be treemap
+    await waitFor(() => {
+      expect(treemapButton!).toHaveAttribute('aria-pressed', 'true');
+    });
+  });
 });

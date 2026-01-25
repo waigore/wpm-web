@@ -31,7 +31,35 @@ export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Portfolio allocation page displaying a 2-tier nested pie chart. Inner ring shows asset types, outer ring shows individual assets. Includes filters for asset types and tickers.',
+        story: 'Portfolio allocation page displaying a 2-tier nested pie chart. Inner ring shows asset types, outer ring shows individual assets. Includes filters for asset types and tickers, and a view toggle to switch between pie chart and treemap views.',
+      },
+    },
+  },
+};
+
+/**
+ * Portfolio allocation page in treemap view.
+ * Shows hierarchical treemap visualization with asset types as parent nodes and individual assets as leaf nodes.
+ */
+export const TreemapView: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Portfolio allocation page in treemap view. Displays hierarchical treemap with asset types as parent nodes and individual assets as leaf nodes. Cell size is proportional to market value. Users can toggle between pie chart and treemap views using the view toggle control.',
+      },
+    },
+  },
+};
+
+/**
+ * Portfolio allocation page demonstrating view toggle functionality.
+ * Shows how users can switch between pie chart and treemap visualizations.
+ */
+export const ViewToggle: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story: 'Portfolio allocation page demonstrating the view toggle functionality. Users can switch between "Pie Chart" and "Treemap" views using the toggle button group. Both views display the same filtered data and respond to the same filters.',
       },
     },
   },
