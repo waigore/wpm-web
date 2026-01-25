@@ -6,6 +6,7 @@ import lotsData from './data/lots.json';
 import performanceData from './data/portfolio-performance.json';
 import assetMetadataData from './data/asset-metadata.json';
 import assetPricesData from './data/asset-prices.json';
+import allocationData from './data/portfolio-allocation.json';
 
 // Mock JWT token generator (simple implementation for development)
 function generateMockToken(username: string): string {
@@ -649,6 +650,70 @@ export const handlers = [
       asset_type: assetPrices.asset_type,
       prices: sortedPrices,
       current_price: assetPrices.current_price ?? null,
+    });
+  }),
+
+  // Portfolio allocation endpoint - MSW will match requests to any origin with this path
+  http.get('*/portfolio/allocation', async ({ request }) => {
+    // Check for authorization header
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Parse query parameters
+    const url = new URL(request.url);
+    const assetTypesParam = url.searchParams.get('asset_types');
+    const tickersParam = url.searchParams.get('tickers');
+
+    // Parse comma-separated values
+    const selectedAssetTypes = assetTypesParam
+      ? assetTypesParam.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+      : null;
+    const selectedTickers = tickersParam
+      ? tickersParam.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+      : null;
+
+    // Start with all allocation data
+    let filteredData = [...allocationData];
+
+    // Apply asset type filtering
+    if (selectedAssetTypes && selectedAssetTypes.length > 0) {
+      filteredData = filteredData.filter((asset) =>
+        selectedAssetTypes.includes(asset.asset_type)
+      );
+    }
+
+    // Apply ticker filtering
+    if (selectedTickers && selectedTickers.length > 0) {
+      filteredData = filteredData.filter((asset) =>
+        selectedTickers.includes(asset.ticker)
+      );
+    }
+
+    // Recalculate allocation percentages based on filtered subset
+    const totalMarketValue = filteredData.reduce((sum, asset) => {
+      return sum + (asset.market_value ?? 0);
+    }, 0);
+
+    // Update allocation percentages for filtered assets
+    const assetsWithRecalculatedAllocation = filteredData.map((asset) => {
+      const newAllocationPercentage =
+        totalMarketValue > 0 && asset.market_value != null
+          ? (asset.market_value / totalMarketValue) * 100
+          : null;
+
+      return {
+        ...asset,
+        allocation_percentage: newAllocationPercentage,
+      };
+    });
+
+    return HttpResponse.json({
+      assets: assetsWithRecalculatedAllocation,
     });
   }),
 ];

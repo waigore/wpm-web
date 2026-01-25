@@ -1,0 +1,174 @@
+[
+  {
+    "ticker": "AAPL",
+    "asset_type": "Stock",
+    "quantity": 100.0,
+    "average_price": 150.50,
+    "cost_basis": 15050.0,
+    "cost_basis_method": "fifo",
+    "current_price": 175.25,
+    "market_value": 17525.0,
+    "unrealized_gain_loss": 2475.0,
+    "realized_gain_loss": 500.0,
+    "allocation_percentage": 7.88,
+    "metadata": {
+      "name": "Apple Inc.",
+      "type": "Stock",
+      "market_cap": "$3.02T",
+      "sector": "Technology",
+      "industry": "Consumer Electronics",
+      "country": "United States",
+      "category": "Large Cap"
+    }
+  },
+  {
+    "ticker": "GOOGL",
+    "asset_type": "Stock",
+    "quantity": 50.0,
+    "average_price": 2500.0,
+    "cost_basis": 125000.0,
+    "cost_basis_method": "average",
+    "current_price": 2800.0,
+    "market_value": 140000.0,
+    "unrealized_gain_loss": 15000.0,
+    "realized_gain_loss": 2000.0,
+    "allocation_percentage": 62.96,
+    "metadata": {
+      "name": "Alphabet Inc.",
+      "type": "Stock",
+      "market_cap": "$1.75T",
+      "sector": "Communication Services",
+      "industry": "Internet Content & Information",
+      "country": "United States",
+      "category": "Large Cap"
+    }
+  },
+  {
+    "ticker": "MSFT",
+    "asset_type": "Stock",
+    "quantity": 75.0,
+    "average_price": 300.0,
+    "cost_basis": 22500.0,
+    "cost_basis_method": "fifo",
+    "current_price": 380.50,
+    "market_value": 28537.5,
+    "unrealized_gain_loss": 6037.5,
+    "realized_gain_loss": null,
+    "allocation_percentage": 12.84,
+    "metadata": {
+      "name": "Microsoft Corporation",
+      "type": "Stock",
+      "market_cap": "$3.10T",
+      "sector": "Technology",
+      "industry": "Software—Infrastructure",
+      "country": "United States",
+      "category": "Large Cap"
+    }
+  },
+  {
+    "ticker": "SPY",
+    "asset_type": "ETF",
+    "quantity": 200.0,
+    "average_price": 400.0,
+    "cost_basis": 80000.0,
+    "cost_basis_method": "average",
+    "current_price": 420.0,
+    "market_value": 84000.0,
+    "unrealized_gain_loss": 4000.0,
+    "realized_gain_loss": null,
+    "allocation_percentage": 37.84,
+    "metadata": {
+      "name": "SPDR S&P 500 ETF Trust",
+      "type": "ETF",
+      "sector": "Diversified",
+      "industry": "Exchange Traded Fund",
+      "country": "United States",
+      "category": "Large Cap"
+    }
+  },
+  {
+    "ticker": "VTI",
+    "asset_type": "ETF",
+    "quantity": 100.0,
+    "average_price": 220.0,
+    "cost_basis": 22000.0,
+    "cost_basis_method": "fifo",
+    "current_price": 235.0,
+    "market_value": 23500.0,
+    "unrealized_gain_loss": 1500.0,
+    "realized_gain_loss": null,
+    "allocation_percentage": 10.58,
+    "metadata": {
+      "name": "Vanguard Total Stock Market ETF",
+      "type": "ETF",
+      "sector": "Diversified",
+      "industry": "Exchange Traded Fund",
+      "country": "United States",
+      "category": "Large Cap"
+    }
+  },
+  {
+    "ticker": "BTC",
+    "asset_type": "Crypto",
+    "quantity": 0.5,
+    "average_price": 45000.0,
+    "cost_basis": 22500.0,
+    "cost_basis_method": "average",
+    "current_price": 50000.0,
+    "market_value": 25000.0,
+    "unrealized_gain_loss": 2500.0,
+    "realized_gain_loss": null,
+    "allocation_percentage": 11.26,
+    "metadata": {
+      "name": "Bitcoin",
+      "type": "Crypto",
+      "sector": "Cryptocurrency",
+      "industry": "Digital Currency",
+      "country": "Global",
+      "category": "Cryptocurrency"
+    }
+  },
+  {
+    "ticker": "ETH",
+    "asset_type": "Crypto",
+    "quantity": 2.0,
+    "average_price": 3000.0,
+    "cost_basis": 6000.0,
+    "cost_basis_method": "fifo",
+    "current_price": 3200.0,
+    "market_value": 6400.0,
+    "unrealized_gain_loss": 400.0,
+    "realized_gain_loss": null,
+    "allocation_percentage": 2.88,
+    "metadata": {
+      "name": "Ethereum",
+      "type": "Crypto",
+      "sector": "Cryptocurrency",
+      "industry": "Digital Currency",
+      "country": "Global",
+      "category": "Cryptocurrency"
+    }
+  },
+  {
+    "ticker": "TSLA",
+    "asset_type": "Stock",
+    "quantity": 25.0,
+    "average_price": 200.0,
+    "cost_basis": 5000.0,
+    "cost_basis_method": "fifo",
+    "current_price": 250.0,
+    "market_value": 6250.0,
+    "unrealized_gain_loss": 1250.0,
+    "realized_gain_loss": null,
+    "allocation_percentage": 2.81,
+    "metadata": {
+      "name": "Tesla, Inc.",
+      "type": "Stock",
+      "market_cap": "$800B",
+      "sector": "Consumer Cyclical",
+      "industry": "Auto Manufacturers",
+      "country": "United States",
+      "category": "Large Cap"
+    }
+  }
+]

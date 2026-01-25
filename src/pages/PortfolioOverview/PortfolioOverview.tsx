@@ -113,13 +113,22 @@ export const PortfolioOverview: React.FC = () => {
         <Typography variant="h4" component="h1">
           Portfolio Overview
         </Typography>
-        <Button
-          variant="outlined"
-          onClick={() => navigate('/portfolio/performance')}
-          aria-label="View portfolio performance"
-        >
-          Performance
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/portfolio/performance')}
+            aria-label="View portfolio performance"
+          >
+            Performance
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/portfolio/allocation')}
+            aria-label="View portfolio allocation"
+          >
+            Allocation
+          </Button>
+        </Box>
       </Box>
 
       {!loading && !error && (

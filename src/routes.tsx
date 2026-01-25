@@ -4,6 +4,7 @@ import { PortfolioOverview } from './pages/PortfolioOverview/PortfolioOverview';
 import { AssetTrades } from './pages/AssetTrades/AssetTrades';
 import { AssetLots } from './pages/AssetLots/AssetLots';
 import { PortfolioPerformance } from './pages/PortfolioPerformance';
+import { PortfolioAllocation } from './pages/PortfolioAllocation';
 import { SessionExpired } from './pages/SessionExpired';
 import { ProtectedLayout } from './components/ProtectedLayout/ProtectedLayout';
 import { useAuth } from './hooks/useAuth';
@@ -107,6 +108,16 @@ export const routes = [
       <ProtectedRoute>
         <ProtectedLayout>
           <PortfolioPerformance />
+        </ProtectedLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/portfolio/allocation',
+    element: (
+      <ProtectedRoute>
+        <ProtectedLayout>
+          <PortfolioAllocation />
         </ProtectedLayout>
       </ProtectedRoute>
     ),

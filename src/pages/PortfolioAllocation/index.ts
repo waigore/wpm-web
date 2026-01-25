@@ -1,0 +1,1 @@
+export { PortfolioAllocation } from './PortfolioAllocation';

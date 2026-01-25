@@ -1,5 +1,5 @@
 import { DefaultService } from '../client/services/DefaultService';
-import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetTradesAllResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse, AssetBrokersResponse, AssetPriceHistoryResponse } from '../client';
+import type { PortfolioAllResponse, PortfolioAssetTradesResponse, PortfolioAssetTradesAllResponse, PortfolioAssetLotsResponse, PortfolioPerformanceResponse, AssetMetadataAllResponse, AssetBrokersResponse, AssetPriceHistoryResponse, PortfolioAllocationResponse } from '../client';
 import { getToken } from './authService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import { handle401Error } from './errorHandler';
@@ -49,6 +49,11 @@ export interface PortfolioPerformanceParams {
 export interface AssetPriceHistoryParams {
   start_date?: string | null;
   end_date?: string | null;
+}
+
+export interface PortfolioAllocationParams {
+  asset_types?: string | null;
+  tickers?: string | null;
 }
 
 /**
@@ -268,6 +273,31 @@ export async function getAssetBrokers(ticker: string): Promise<AssetBrokersRespo
 
   try {
     return await DefaultService.getAssetBrokersEndpointAssetBrokersTickerGet(ticker);
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
+}
+
+/**
+ * Get portfolio allocation data with optional filtering by asset types and tickers
+ * @param params - Optional parameters for filtering by asset types and tickers
+ * @returns PortfolioAllocationResponse with filtered positions and metadata
+ */
+export async function getPortfolioAllocation(
+  params?: PortfolioAllocationParams
+): Promise<PortfolioAllocationResponse> {
+  // Ensure token is set in OpenAPI config (getToken already does this)
+  getToken();
+
+  const assetTypes = params?.asset_types ?? null;
+  const tickers = params?.tickers ?? null;
+
+  try {
+    return await DefaultService.getPortfolioAllocationEndpointPortfolioAllocationGet(
+      assetTypes,
+      tickers
+    );
   } catch (error: unknown) {
     handle401Error(error);
     throw error;
