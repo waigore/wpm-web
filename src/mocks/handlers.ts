@@ -6,6 +6,7 @@ import lotsData from './data/lots.json';
 import performanceData from './data/portfolio-performance.json';
 import referencePerformanceData from './data/reference-performance.json';
 import referencePerformanceBtcData from './data/reference-performance-btc.json';
+import referencePerformanceIauData from './data/reference-performance-iau.json';
 import assetMetadataData from './data/asset-metadata.json';
 import assetPricesData from './data/asset-prices.json';
 import allocationData from './data/portfolio-allocation.json';
@@ -617,7 +618,12 @@ export const handlers = [
     }
 
     const ticker = params?.ticker ?? '';
-    const sourceData = ticker === 'BTC-USD' ? referencePerformanceBtcData : referencePerformanceData;
+    const sourceData =
+      ticker === 'BTC-USD'
+        ? referencePerformanceBtcData
+        : ticker === 'IAU'
+          ? referencePerformanceIauData
+          : referencePerformanceData;
     let filteredData = [...sourceData];
     if (startDate || endDate) {
       filteredData = filteredData.filter((point: { date: string }) => {

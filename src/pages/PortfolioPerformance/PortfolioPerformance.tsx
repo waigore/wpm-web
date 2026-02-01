@@ -90,6 +90,15 @@ export const PortfolioPerformance: React.FC = () => {
     ...performanceParams,
   });
 
+  const {
+    historyPoints: referenceIauHistoryPoints,
+    error: referenceIauError,
+  } = useReferencePerformance({
+    ticker: 'IAU',
+    asset_type: 'ETF',
+    ...performanceParams,
+  });
+
   useEffect(() => {
     if (isAuthenticated) {
       logger.info('Portfolio performance page loaded', { context: 'PortfolioPerformance' });
@@ -141,10 +150,12 @@ export const PortfolioPerformance: React.FC = () => {
         date: string;
         total_market_value?: number;
         reference_value?: number;
+        reference_iau_value?: number;
         reference_btc_value?: number;
         formattedDate: string;
         formattedValue: string;
         formattedReferenceValue?: string;
+        formattedReferenceIauValue?: string;
         formattedReferenceBtcValue?: string;
       }
     >();
@@ -172,6 +183,22 @@ export const PortfolioPerformance: React.FC = () => {
         });
       }
     }
+    for (const point of referenceIauHistoryPoints) {
+      const existing = byDate.get(point.date);
+      const formattedReferenceIauValue = formatCurrency(point.total_market_value);
+      if (existing) {
+        existing.reference_iau_value = point.total_market_value;
+        existing.formattedReferenceIauValue = formattedReferenceIauValue;
+      } else {
+        byDate.set(point.date, {
+          date: point.date,
+          reference_iau_value: point.total_market_value,
+          formattedDate: formatDate(point.date),
+          formattedValue: '',
+          formattedReferenceIauValue,
+        });
+      }
+    }
     for (const point of referenceBtcHistoryPoints) {
       const existing = byDate.get(point.date);
       const formattedReferenceBtcValue = formatCurrency(point.total_market_value);
@@ -190,7 +217,7 @@ export const PortfolioPerformance: React.FC = () => {
     }
     const dates = Array.from(byDate.keys()).sort();
     return dates.map((d) => byDate.get(d)!);
-  }, [historyPoints, referenceHistoryPoints, referenceBtcHistoryPoints]);
+  }, [historyPoints, referenceHistoryPoints, referenceIauHistoryPoints, referenceBtcHistoryPoints]);
 
   // Identify dates that should show the year (first occurrence of each month)
   const datesWithYear = useMemo(() => {
@@ -222,10 +249,12 @@ export const PortfolioPerformance: React.FC = () => {
         date: string;
         total_market_value?: number;
         reference_value?: number;
+        reference_iau_value?: number;
         reference_btc_value?: number;
         formattedDate: string;
         formattedValue: string;
         formattedReferenceValue?: string;
+        formattedReferenceIauValue?: string;
         formattedReferenceBtcValue?: string;
       };
     }>;
@@ -245,6 +274,11 @@ export const PortfolioPerformance: React.FC = () => {
           {data.formattedReferenceValue != null && (
             <Typography variant="body2" color="text.secondary">
               Reference (SPY): {data.formattedReferenceValue}
+            </Typography>
+          )}
+          {data.formattedReferenceIauValue != null && (
+            <Typography variant="body2" color="text.secondary">
+              Reference (IAU): {data.formattedReferenceIauValue}
             </Typography>
           )}
           {data.formattedReferenceBtcValue != null && (
@@ -363,6 +397,15 @@ export const PortfolioPerformance: React.FC = () => {
         </Box>
       )}
 
+      {/* Reference (IAU) failure: non-blocking warning */}
+      {referenceIauError && !loading && !error && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="warning" role="status">
+            Reference (IAU) comparison could not be loaded. Refresh the page to try again.
+          </Alert>
+        </Box>
+      )}
+
       {/* Chart */}
       {!loading && !error && (
         <Paper elevation={2} sx={{ p: 3 }}>
@@ -424,6 +467,15 @@ export const PortfolioPerformance: React.FC = () => {
                   dataKey="reference_value"
                   name="Reference (SPY)"
                   stroke="#9e9e9e"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="reference_iau_value"
+                  name="Reference (IAU)"
+                  stroke="#FFD700"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}

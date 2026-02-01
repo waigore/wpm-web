@@ -4,7 +4,7 @@
 PortfolioPerformance - Portfolio performance visualization page
 
 ## Purpose
-Display portfolio total market value over time as a line graph, with reference comparison lines for SPY and BTC-USD. Supports different granularities (daily, weekly, monthly) and date ranges (portfolio start, YTD, 52w) with immediate API refresh on toggle changes. This is a detail page navigable from Portfolio Overview.
+Display portfolio total market value over time as a line graph, with reference comparison lines for SPY, IAU, and BTC-USD. Supports different granularities (daily, weekly, monthly) and date ranges (portfolio start, YTD, 52w) with immediate API refresh on toggle changes. This is a detail page navigable from Portfolio Overview.
 
 ## Layout
 
@@ -14,7 +14,7 @@ Display portfolio total market value over time as a line graph, with reference c
 - Control section with two toggle groups:
   - Granularity toggle: Daily, Weekly, Monthly
   - Date range toggle: Portfolio Start, YTD, 52w
-- Line graph displaying portfolio total market value over time and reference (SPY, BTC-USD) performance (when available)
+- Line graph displaying portfolio total market value over time and reference (SPY, IAU, BTC-USD) performance (when available)
 - Loading indicator during data fetch
 - Error message display area (conditionally visible)
 - Empty state when no data exists
@@ -47,9 +47,10 @@ PortfolioPerformance
 │               ├── Recharts XAxis (date, formatted)
 │               ├── Recharts YAxis (total_market_value, formatted as currency)
 │               ├── Recharts Tooltip (shows date, portfolio value, reference values)
-│               ├── Recharts Legend (Portfolio, Reference (SPY), Reference (BTC-USD))
+│               ├── Recharts Legend (Portfolio, Reference (SPY), Reference (IAU), Reference (BTC-USD))
 │               ├── Recharts Line (dataKey: "total_market_value", name: "Portfolio")
 │               ├── Recharts Line (dataKey: "reference_value", name: "Reference (SPY)")
+│               ├── Recharts Line (dataKey: "reference_iau_value", name: "Reference (IAU)")
 │               └── Recharts Line (dataKey: "reference_btc_value", name: "Reference (BTC-USD)")
 ```
 
@@ -62,11 +63,13 @@ PortfolioPerformance
 - `historyPoints: PortfolioHistoryPoint[]` - Array of portfolio history points from API
 - `referenceHistoryPoints: PortfolioHistoryPoint[]` - Array of reference (SPY) history points from API
 - `referenceBtcHistoryPoints: PortfolioHistoryPoint[]` - Array of reference (BTC-USD) history points from API
+- `referenceIauHistoryPoints: PortfolioHistoryPoint[]` - Array of reference (IAU) history points from API
 - `loading: boolean` - Loading state during portfolio data fetch
 - `referenceLoading: boolean` - Loading state during reference data fetch (if needed for UI)
 - `error: string | null` - Error message to display (portfolio)
 - `referenceError: string | null` - Error message when SPY reference API fails (non-blocking)
 - `referenceBtcError: string | null` - Error message when BTC-USD reference API fails (non-blocking)
+- `referenceIauError: string | null` - Error message when IAU reference API fails (non-blocking)
 - `granularity: 'daily' | 'weekly' | 'monthly'` - Selected granularity (default: 'daily')
 - `dateRange: 'portfolio_start' | 'ytd' | '52w'` - Selected date range (default: 'ytd')
 - `startDate: string | null` - Calculated start date based on dateRange selection
@@ -147,9 +150,9 @@ PortfolioPerformance
 - **Method**: GET
 - **Path**: `/reference/{ticker}/performance`
 - **Authentication**: Required (JWT token in Authorization header)
-- **Path Parameters**: `ticker` (e.g. "SPY", "BTC-USD")
+- **Path Parameters**: `ticker` (e.g. "SPY", "IAU", "BTC-USD")
 - **Query Parameters**:
-  - `asset_type` (required, string, e.g. "ETF" for SPY, "Crypto" for BTC-USD)
+  - `asset_type` (required, string, e.g. "ETF" for SPY and IAU, "Crypto" for BTC-USD)
   - `start_date` (optional, string, ISO format YYYY-MM-DD): Same semantics as portfolio performance
   - `end_date` (optional, string, ISO format YYYY-MM-DD): Same semantics as portfolio performance
   - `granularity` (optional, string, default: "daily", pattern: "^(daily|weekly|monthly)$"): Same semantics as portfolio performance
@@ -164,14 +167,14 @@ PortfolioPerformance
 - Pass query parameters to respective API endpoints
 
 ### Data Fetching
-- Fetches portfolio and both reference (SPY, BTC-USD) data **in parallel** on component mount with the same start_date, end_date, and granularity so the display is consistent.
-- Calls `usePortfolioPerformance()` and two `useReferencePerformance()` hooks: `useReferencePerformance({ ticker: 'SPY', asset_type: 'ETF', start_date, end_date, granularity })` and `useReferencePerformance({ ticker: 'BTC-USD', asset_type: 'Crypto', start_date, end_date, granularity })` with identical date/granularity params; do not call APIs in sequence.
+- Fetches portfolio and all reference (SPY, IAU, BTC-USD) data **in parallel** on component mount with the same start_date, end_date, and granularity so the display is consistent.
+- Calls `usePortfolioPerformance()` and three `useReferencePerformance()` hooks: `useReferencePerformance({ ticker: 'SPY', asset_type: 'ETF', start_date, end_date, granularity })`, `useReferencePerformance({ ticker: 'IAU', asset_type: 'ETF', start_date, end_date, granularity })`, and `useReferencePerformance({ ticker: 'BTC-USD', asset_type: 'Crypto', start_date, end_date, granularity })` with identical date/granularity params; do not call APIs in sequence.
 - Re-fetches all when:
   - Granularity changes
   - Date range changes (which updates startDate)
   - Authentication state changes (if user re-authenticates)
-- **Progressive rendering**: Chart is shown when portfolio performance is available; reference (SPY) and reference (BTC-USD) lines are added when their API responses are received so each line appears as its API returns.
-- Chart data is built by merging portfolio and both reference series by date into a single array for the LineChart.
+- **Progressive rendering**: Chart is shown when portfolio performance is available; reference (SPY), reference (IAU), and reference (BTC-USD) lines are added when their API responses are received so each line appears as its API returns.
+- Chart data is built by merging portfolio and all reference series by date into a single array for the LineChart.
 
 ### Error Handling
 - **400 Bad Request**: 
@@ -201,7 +204,12 @@ PortfolioPerformance
 - Log reference failure at WARN or ERROR level.
 
 ### Reference (BTC-USD) Error Handling
-- If only the BTC-USD reference API fails: show the chart with portfolio and SPY lines and a **non-blocking warning message** (e.g. MUI Alert severity="warning"): "Reference (BTC-USD) comparison could not be loaded. Refresh the page to try again."
+- If only the BTC-USD reference API fails: show the chart with portfolio, SPY, and IAU lines and a **non-blocking warning message** (e.g. MUI Alert severity="warning"): "Reference (BTC-USD) comparison could not be loaded. Refresh the page to try again."
+- No retry button for the reference; the user retries by refreshing the page manually.
+- Log reference failure at WARN or ERROR level.
+
+### Reference (IAU) Error Handling
+- If only the IAU reference API fails: show the chart with portfolio, SPY, and BTC-USD lines and a **non-blocking warning message** (e.g. MUI Alert severity="warning"): "Reference (IAU) comparison could not be loaded. Refresh the page to try again."
 - No retry button for the reference; the user retries by refreshing the page manually.
 - Log reference failure at WARN or ERROR level.
 
@@ -245,7 +253,7 @@ PortfolioPerformance
 - Label: "Date" (optional)
 
 ### Y-Axis (Total Market Value)
-- Data key: `total_market_value` (from PortfolioHistoryPoint); chart also uses `reference_value` (SPY) and `reference_btc_value` (BTC-USD)
+- Data key: `total_market_value` (from PortfolioHistoryPoint); chart also uses `reference_value` (SPY), `reference_iau_value` (IAU), and `reference_btc_value` (BTC-USD)
 - Format: Currency format (e.g., "$1,234.56")
 - Type: Number
 - Label: "Portfolio Value (USD)" or "Market Value (USD)"
@@ -254,11 +262,12 @@ PortfolioPerformance
 ### Lines
 - **Portfolio line**: dataKey `total_market_value`, name "Portfolio". Use theme primary color. Stroke width 2-3px.
 - **Reference (SPY) line**: dataKey `reference_value`, name "Reference (SPY)". Use gray (e.g. #9e9e9e). Stroke width 2-3px. Rendered when reference data is available; same date/granularity as portfolio.
+- **Reference (IAU) line**: dataKey `reference_iau_value`, name "Reference (IAU)". Use gold (e.g. #FFD700). Stroke width 2-3px. Rendered when reference data is available; same date/granularity as portfolio.
 - **Reference (BTC-USD) line**: dataKey `reference_btc_value`, name "Reference (BTC-USD)". Use orange. Stroke width 2-3px. Rendered when reference data is available; same date/granularity as portfolio.
 - Dot: Optional (can show dots on data points or hide for cleaner look)
 
 ### Legend
-- Recharts Legend component so users can distinguish "Portfolio", "Reference (SPY)", and "Reference (BTC-USD)" lines.
+- Recharts Legend component so users can distinguish "Portfolio", "Reference (SPY)", "Reference (IAU)", and "Reference (BTC-USD)" lines.
 
 ### Tooltip
 - Shows on hover
@@ -266,6 +275,7 @@ PortfolioPerformance
   - Date: Formatted date string
   - Portfolio value: Formatted currency when present
   - Reference (SPY) value: Formatted currency when present
+  - Reference (IAU) value: Formatted currency when present
   - Reference (BTC-USD) value: Formatted currency when present
 - Custom formatting using recharts Tooltip component
 
@@ -279,9 +289,10 @@ PortfolioPerformance
 ### Error States
 1. **Loading State**: Shows LoadingSpinner component (portfolio loading), disables interactions
 2. **Error State**: Shows ErrorMessage component with error text and retry button (portfolio errors only)
-3. **Reference (SPY) Failure**: Non-blocking MUI Alert severity="warning" when SPY reference API fails: "Reference (SPY) comparison could not be loaded. Refresh the page to try again." Chart still shows portfolio (and BTC-USD when available); no retry button for reference.
-4. **Reference (BTC-USD) Failure**: Non-blocking MUI Alert severity="warning" when BTC-USD reference API fails: "Reference (BTC-USD) comparison could not be loaded. Refresh the page to try again." Chart still shows portfolio and SPY; no retry button for reference.
-5. **Empty State**: Shows message when portfolio history_points array is empty: "No performance data available for the selected date range"
+3. **Reference (SPY) Failure**: Non-blocking MUI Alert severity="warning" when SPY reference API fails: "Reference (SPY) comparison could not be loaded. Refresh the page to try again." Chart still shows portfolio (and IAU, BTC-USD when available); no retry button for reference.
+4. **Reference (BTC-USD) Failure**: Non-blocking MUI Alert severity="warning" when BTC-USD reference API fails: "Reference (BTC-USD) comparison could not be loaded. Refresh the page to try again." Chart still shows portfolio, SPY, and IAU; no retry button for reference.
+5. **Reference (IAU) Failure**: Non-blocking MUI Alert severity="warning" when IAU reference API fails: "Reference (IAU) comparison could not be loaded. Refresh the page to try again." Chart still shows portfolio, SPY, and BTC-USD; no retry button for reference.
+6. **Empty State**: Shows message when portfolio history_points array is empty: "No performance data available for the selected date range"
 
 ### Error Recovery
 - Retry button in ErrorMessage component
@@ -291,7 +302,7 @@ PortfolioPerformance
 ## Events
 
 ### Internal Events
-- `onGranularityChange(granularity: 'daily' | 'weekly' | 'monthly')`: Updates granularity state and triggers all API calls (portfolio, SPY, BTC-USD)
+- `onGranularityChange(granularity: 'daily' | 'weekly' | 'monthly')`: Updates granularity state and triggers all API calls (portfolio, SPY, IAU, BTC-USD)
 - `onDateRangeChange(dateRange: 'portfolio_start' | 'ytd' | '52w')`: Updates dateRange state, calculates startDate, and triggers all API calls
 - `onRetry()`: Retries portfolio API call only with current state parameters (startDate, endDate, granularity); does not refetch references (user refreshes page to retry references)
 

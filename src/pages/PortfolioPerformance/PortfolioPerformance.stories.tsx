@@ -25,13 +25,13 @@ type Story = StoryObj<typeof PortfolioPerformance>;
 
 /**
  * Default portfolio performance page showing performance graph with weekly granularity and portfolio start date range.
- * Uses MSW handlers for mock data. Displays line chart of portfolio total market value over time with reference lines (SPY, BTC-USD).
+ * Uses MSW handlers for mock data. Displays line chart of portfolio total market value over time with reference lines (SPY, IAU, BTC-USD).
  */
 export const Default: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Portfolio performance page displaying a line graph of portfolio total market value over time with reference comparisons (SPY, BTC-USD). Default granularity is weekly and default date range is portfolio start.',
+        story: 'Portfolio performance page displaying a line graph of portfolio total market value over time with reference comparisons (SPY, IAU, BTC-USD). Default granularity is weekly and default date range is portfolio start.',
       },
     },
   },

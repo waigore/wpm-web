@@ -43,18 +43,21 @@ const mockHistoryPoints = [
     total_market_value: 100000.0,
     asset_positions: { AAPL: 5000.0 },
     prices: { AAPL: 150.0 },
+    percentage_return: 0,
   },
   {
     date: '2024-01-15',
     total_market_value: 105000.0,
     asset_positions: { AAPL: 5500.0 },
     prices: { AAPL: 155.0 },
+    percentage_return: 0,
   },
   {
     date: '2024-02-01',
     total_market_value: 110000.0,
     asset_positions: { AAPL: 6000.0 },
     prices: { AAPL: 160.0 },
+    percentage_return: 0,
   },
 ];
 
@@ -62,6 +65,12 @@ const mockReferenceHistoryPoints = [
   { date: '2024-01-01', total_market_value: 98000.0, asset_positions: { SPY: 98000.0 }, prices: { SPY: 390.0 }, percentage_return: 0 },
   { date: '2024-01-15', total_market_value: 102000.0, asset_positions: { SPY: 102000.0 }, prices: { SPY: 392.0 }, percentage_return: 0 },
   { date: '2024-02-01', total_market_value: 105000.0, asset_positions: { SPY: 105000.0 }, prices: { SPY: 394.0 }, percentage_return: 0 },
+];
+
+const mockReferenceIauHistoryPoints = [
+  { date: '2024-01-01', total_market_value: 95000.0, asset_positions: { IAU: 95000.0 }, prices: { IAU: 170.0 }, percentage_return: 0 },
+  { date: '2024-01-15', total_market_value: 98200.0, asset_positions: { IAU: 98200.0 }, prices: { IAU: 175.0 }, percentage_return: 0 },
+  { date: '2024-02-01', total_market_value: 100500.0, asset_positions: { IAU: 100500.0 }, prices: { IAU: 179.0 }, percentage_return: 0 },
 ];
 
 const renderPortfolioPerformance = () => {
@@ -360,7 +369,7 @@ describe('PortfolioPerformance', () => {
     expect(screen.getByText('Performance')).toBeInTheDocument();
   });
 
-  it('shows chart and fetches portfolio and both reference (SPY, BTC-USD) performance in parallel', async () => {
+  it('shows chart and fetches portfolio and all reference (SPY, IAU, BTC-USD) performance in parallel', async () => {
     renderPortfolioPerformance();
 
     await waitFor(() => {
@@ -371,6 +380,13 @@ describe('PortfolioPerformance', () => {
       expect(portfolioService.getPortfolioPerformance).toHaveBeenCalled();
       expect(portfolioService.getReferencePerformance).toHaveBeenCalledWith(
         'SPY',
+        expect.objectContaining({
+          asset_type: 'ETF',
+          granularity: 'weekly',
+        })
+      );
+      expect(portfolioService.getReferencePerformance).toHaveBeenCalledWith(
+        'IAU',
         expect.objectContaining({
           asset_type: 'ETF',
           granularity: 'weekly',
@@ -391,12 +407,14 @@ describe('PortfolioPerformance', () => {
     }, { timeout: 3000 });
   });
 
-  it('shows chart with portfolio and BTC-USD when only SPY reference API fails', async () => {
+  it('shows chart with portfolio, IAU, and BTC-USD when only SPY reference API fails', async () => {
     vi.mocked(portfolioService.getReferencePerformance).mockImplementation(
       (ticker: string) =>
         ticker === 'SPY'
           ? Promise.reject(new Error('Reference failed'))
-          : Promise.resolve({ history_points: mockReferenceHistoryPoints })
+          : ticker === 'IAU'
+            ? Promise.resolve({ history_points: mockReferenceIauHistoryPoints })
+            : Promise.resolve({ history_points: mockReferenceHistoryPoints })
     );
 
     renderPortfolioPerformance();
@@ -416,10 +434,37 @@ describe('PortfolioPerformance', () => {
     expect(screen.getByText('Portfolio')).toBeInTheDocument();
   });
 
-  it('shows chart with portfolio and SPY when only BTC-USD reference API fails', async () => {
+  it('shows chart with portfolio, SPY, and IAU when only BTC-USD reference API fails', async () => {
     vi.mocked(portfolioService.getReferencePerformance).mockImplementation(
       (ticker: string) =>
         ticker === 'BTC-USD'
+          ? Promise.reject(new Error('Reference failed'))
+          : ticker === 'IAU'
+            ? Promise.resolve({ history_points: mockReferenceIauHistoryPoints })
+            : Promise.resolve({ history_points: mockReferenceHistoryPoints })
+    );
+
+    renderPortfolioPerformance();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Portfolio Performance/i)).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      const chartContainer = document.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    expect(
+      screen.getByText(/Reference \(BTC-USD\) comparison could not be loaded. Refresh the page to try again./i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Portfolio')).toBeInTheDocument();
+  });
+
+  it('shows chart with portfolio, SPY, and BTC-USD when only IAU reference API fails', async () => {
+    vi.mocked(portfolioService.getReferencePerformance).mockImplementation(
+      (ticker: string) =>
+        ticker === 'IAU'
           ? Promise.reject(new Error('Reference failed'))
           : Promise.resolve({ history_points: mockReferenceHistoryPoints })
     );
@@ -436,7 +481,7 @@ describe('PortfolioPerformance', () => {
     }, { timeout: 3000 });
 
     expect(
-      screen.getByText(/Reference \(BTC-USD\) comparison could not be loaded. Refresh the page to try again./i)
+      screen.getByText(/Reference \(IAU\) comparison could not be loaded. Refresh the page to try again./i)
     ).toBeInTheDocument();
     expect(screen.getByText('Portfolio')).toBeInTheDocument();
   });

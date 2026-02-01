@@ -1,0 +1,302 @@
+[
+  {
+    "date": "2023-01-01",
+    "total_market_value": 95000,
+    "asset_positions": {
+      "IAU": 95000
+    },
+    "prices": {
+      "IAU": 170
+    }
+  },
+  {
+    "date": "2023-01-15",
+    "total_market_value": 98200,
+    "asset_positions": {
+      "IAU": 98200
+    },
+    "prices": {
+      "IAU": 175
+    }
+  },
+  {
+    "date": "2023-02-01",
+    "total_market_value": 100500,
+    "asset_positions": {
+      "IAU": 100500
+    },
+    "prices": {
+      "IAU": 179
+    }
+  },
+  {
+    "date": "2023-02-15",
+    "total_market_value": 101800,
+    "asset_positions": {
+      "IAU": 101800
+    },
+    "prices": {
+      "IAU": 182
+    }
+  },
+  {
+    "date": "2023-03-01",
+    "total_market_value": 105200,
+    "asset_positions": {
+      "IAU": 105200
+    },
+    "prices": {
+      "IAU": 188
+    }
+  },
+  {
+    "date": "2023-03-15",
+    "total_market_value": 107500,
+    "asset_positions": {
+      "IAU": 107500
+    },
+    "prices": {
+      "IAU": 192
+    }
+  },
+  {
+    "date": "2023-04-01",
+    "total_market_value": 109800,
+    "asset_positions": {
+      "IAU": 109800
+    },
+    "prices": {
+      "IAU": 196
+    }
+  },
+  {
+    "date": "2023-04-15",
+    "total_market_value": 111100,
+    "asset_positions": {
+      "IAU": 111100
+    },
+    "prices": {
+      "IAU": 198
+    }
+  },
+  {
+    "date": "2023-05-01",
+    "total_market_value": 113400,
+    "asset_positions": {
+      "IAU": 113400
+    },
+    "prices": {
+      "IAU": 202
+    }
+  },
+  {
+    "date": "2023-05-15",
+    "total_market_value": 114700,
+    "asset_positions": {
+      "IAU": 114700
+    },
+    "prices": {
+      "IAU": 205
+    }
+  },
+  {
+    "date": "2023-06-01",
+    "total_market_value": 117000,
+    "asset_positions": {
+      "IAU": 117000
+    },
+    "prices": {
+      "IAU": 209
+    }
+  },
+  {
+    "date": "2023-06-15",
+    "total_market_value": 118300,
+    "asset_positions": {
+      "IAU": 118300
+    },
+    "prices": {
+      "IAU": 211
+    }
+  },
+  {
+    "date": "2023-07-01",
+    "total_market_value": 120600,
+    "asset_positions": {
+      "IAU": 120600
+    },
+    "prices": {
+      "IAU": 215
+    }
+  },
+  {
+    "date": "2023-07-15",
+    "total_market_value": 121900,
+    "asset_positions": {
+      "IAU": 121900
+    },
+    "prices": {
+      "IAU": 218
+    }
+  },
+  {
+    "date": "2023-08-01",
+    "total_market_value": 123200,
+    "asset_positions": {
+      "IAU": 123200
+    },
+    "prices": {
+      "IAU": 220
+    }
+  },
+  {
+    "date": "2023-08-15",
+    "total_market_value": 124500,
+    "asset_positions": {
+      "IAU": 124500
+    },
+    "prices": {
+      "IAU": 222
+    }
+  },
+  {
+    "date": "2023-09-01",
+    "total_market_value": 126800,
+    "asset_positions": {
+      "IAU": 126800
+    },
+    "prices": {
+      "IAU": 226
+    }
+  },
+  {
+    "date": "2023-09-15",
+    "total_market_value": 128100,
+    "asset_positions": {
+      "IAU": 128100
+    },
+    "prices": {
+      "IAU": 229
+    }
+  },
+  {
+    "date": "2023-10-01",
+    "total_market_value": 130400,
+    "asset_positions": {
+      "IAU": 130400
+    },
+    "prices": {
+      "IAU": 233
+    }
+  },
+  {
+    "date": "2023-10-15",
+    "total_market_value": 131700,
+    "asset_positions": {
+      "IAU": 131700
+    },
+    "prices": {
+      "IAU": 235
+    }
+  },
+  {
+    "date": "2023-11-01",
+    "total_market_value": 134000,
+    "asset_positions": {
+      "IAU": 134000
+    },
+    "prices": {
+      "IAU": 239
+    }
+  },
+  {
+    "date": "2023-11-15",
+    "total_market_value": 136300,
+    "asset_positions": {
+      "IAU": 136300
+    },
+    "prices": {
+      "IAU": 243
+    }
+  },
+  {
+    "date": "2023-12-01",
+    "total_market_value": 138600,
+    "asset_positions": {
+      "IAU": 138600
+    },
+    "prices": {
+      "IAU": 247
+    }
+  },
+  {
+    "date": "2023-12-15",
+    "total_market_value": 139900,
+    "asset_positions": {
+      "IAU": 139900
+    },
+    "prices": {
+      "IAU": 250
+    }
+  },
+  {
+    "date": "2024-01-01",
+    "total_market_value": 142200,
+    "asset_positions": {
+      "IAU": 142200
+    },
+    "prices": {
+      "IAU": 254
+    }
+  },
+  {
+    "date": "2024-01-15",
+    "total_market_value": 144500,
+    "asset_positions": {
+      "IAU": 144500
+    },
+    "prices": {
+      "IAU": 258
+    }
+  },
+  {
+    "date": "2024-02-01",
+    "total_market_value": 146800,
+    "asset_positions": {
+      "IAU": 146800
+    },
+    "prices": {
+      "IAU": 262
+    }
+  },
+  {
+    "date": "2024-02-15",
+    "total_market_value": 148100,
+    "asset_positions": {
+      "IAU": 148100
+    },
+    "prices": {
+      "IAU": 264
+    }
+  },
+  {
+    "date": "2024-03-01",
+    "total_market_value": 150400,
+    "asset_positions": {
+      "IAU": 150400
+    },
+    "prices": {
+      "IAU": 268
+    }
+  },
+  {
+    "date": "2024-03-15",
+    "total_market_value": 152700,
+    "asset_positions": {
+      "IAU": 152700
+    },
+    "prices": {
+      "IAU": 272
+    }
+  }
+]
