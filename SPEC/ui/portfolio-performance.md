@@ -4,7 +4,7 @@
 PortfolioPerformance - Portfolio performance visualization page
 
 ## Purpose
-Display portfolio total market value over time as a line graph. Supports different granularities (daily, weekly, monthly) and date ranges (portfolio start, YTD, 52w) with immediate API refresh on toggle changes. This is a detail page navigable from Portfolio Overview.
+Display portfolio total market value over time as a line graph, with an optional reference (SPY) comparison line. Supports different granularities (daily, weekly, monthly) and date ranges (portfolio start, YTD, 52w) with immediate API refresh on toggle changes. This is a detail page navigable from Portfolio Overview.
 
 ## Layout
 
@@ -14,7 +14,7 @@ Display portfolio total market value over time as a line graph. Supports differe
 - Control section with two toggle groups:
   - Granularity toggle: Daily, Weekly, Monthly
   - Date range toggle: Portfolio Start, YTD, 52w
-- Line graph displaying portfolio total market value over time
+- Line graph displaying portfolio total market value over time and reference (SPY) performance (when available)
 - Loading indicator during data fetch
 - Error message display area (conditionally visible)
 - Empty state when no data exists
@@ -46,9 +46,10 @@ PortfolioPerformance
 │               ├── Recharts CartesianGrid
 │               ├── Recharts XAxis (date, formatted)
 │               ├── Recharts YAxis (total_market_value, formatted as currency)
-│               ├── Recharts Tooltip (shows date and formatted currency)
-│               ├── Recharts Legend (optional)
-│               └── Recharts Line (dataKey: "total_market_value")
+│               ├── Recharts Tooltip (shows date, portfolio value, reference value)
+│               ├── Recharts Legend (Portfolio, Reference (SPY))
+│               ├── Recharts Line (dataKey: "total_market_value", name: "Portfolio")
+│               └── Recharts Line (dataKey: "reference_value", name: "Reference (SPY)")
 ```
 
 ## Props
@@ -58,8 +59,11 @@ PortfolioPerformance
 
 ### Internal State
 - `historyPoints: PortfolioHistoryPoint[]` - Array of portfolio history points from API
-- `loading: boolean` - Loading state during data fetch
-- `error: string | null` - Error message to display
+- `referenceHistoryPoints: PortfolioHistoryPoint[]` - Array of reference (SPY) history points from API
+- `loading: boolean` - Loading state during portfolio data fetch
+- `referenceLoading: boolean` - Loading state during reference data fetch
+- `error: string | null` - Error message to display (portfolio)
+- `referenceError: string | null` - Error message when reference API fails (non-blocking)
 - `granularity: 'daily' | 'weekly' | 'monthly'` - Selected granularity (default: 'daily')
 - `dateRange: 'portfolio_start' | 'ytd' | '52w'` - Selected date range (default: 'ytd')
 - `startDate: string | null` - Calculated start date based on dateRange selection
@@ -100,14 +104,15 @@ PortfolioPerformance
    - Updates graph with new data points
 
 4. **Retry on Error**
-   - User clicks retry button in error message
-   - Clears error state
+   - User clicks retry button in error message (portfolio errors only)
+   - Clears portfolio error state
    - Retries `getPortfolioPerformance()` API call with current state parameters (startDate, endDate, granularity)
+   - Does not refetch reference performance; user retries reference by refreshing the page
    - Logs retry attempt at INFO level: `"Retrying portfolio performance fetch"`
 
 ## API Calls
 
-### Endpoint
+### Portfolio Performance Endpoint
 - **Method**: GET
 - **Path**: `/portfolio/all/performance`
 - **Authentication**: Required (JWT token in Authorization header)
@@ -135,20 +140,35 @@ PortfolioPerformance
 - **Response (422)**: Validation Error (invalid query parameters, e.g., invalid granularity value)
 - **Response (500)**: Server error (historical portfolio or performance cache is not available)
 
-### Service Function
+### Reference Performance Endpoint
+- **Method**: GET
+- **Path**: `/reference/{ticker}/performance`
+- **Authentication**: Required (JWT token in Authorization header)
+- **Path Parameters**: `ticker` (e.g. "SPY")
+- **Query Parameters**:
+  - `asset_type` (required, string, e.g. "ETF" for SPY)
+  - `start_date` (optional, string, ISO format YYYY-MM-DD): Same semantics as portfolio performance
+  - `end_date` (optional, string, ISO format YYYY-MM-DD): Same semantics as portfolio performance
+  - `granularity` (optional, string, default: "daily", pattern: "^(daily|weekly|monthly)$"): Same semantics as portfolio performance
+- **Response (200)**: Same `PortfolioPerformanceResponse` (`history_points` array of `PortfolioHistoryPoint`)
+- **Response (400/401/422/500)**: Same error semantics as portfolio performance
+
+### Service Functions
 - `portfolioService.getPortfolioPerformance(params?: { start_date?: string | null, end_date?: string | null, granularity?: 'daily' | 'weekly' | 'monthly' }): Promise<PortfolioPerformanceResponse>`
-- Returns `PortfolioPerformanceResponse` containing `history_points` array
-- Includes JWT token from AuthContext in Authorization header
-- Passes query parameters to API endpoint
+- `portfolioService.getReferencePerformance(ticker: string, params: { asset_type: string, start_date?: string | null, end_date?: string | null, granularity?: 'daily' | 'weekly' | 'monthly' }): Promise<PortfolioPerformanceResponse>`
+- Both return `PortfolioPerformanceResponse` containing `history_points` array
+- Include JWT token from AuthContext in Authorization header
+- Pass query parameters to respective API endpoints
 
 ### Data Fetching
-- Fetches data on component mount with default parameters (granularity='daily', dateRange='ytd')
-- Re-fetches when:
+- Fetches portfolio and reference (SPY) data **in parallel** on component mount with the same start_date, end_date, and granularity so the display is consistent.
+- Calls `usePortfolioPerformance()` and `useReferencePerformance({ ticker: 'SPY', asset_type: 'ETF', start_date, end_date, granularity })` with identical date/granularity params; do not call APIs in sequence.
+- Re-fetches both when:
   - Granularity changes
   - Date range changes (which updates startDate)
   - Authentication state changes (if user re-authenticates)
-- Uses `usePortfolioPerformance()` hook to manage fetching logic with parameters
-- Each API call includes current state parameters for start_date, end_date, and granularity
+- **Progressive rendering**: Chart is shown when portfolio performance is available; reference (SPY) line is added when its API response is received so each line appears as its API returns.
+- Chart data is built by merging portfolio and reference series by date into a single array for the LineChart.
 
 ### Error Handling
 - **400 Bad Request**: 
@@ -171,6 +191,11 @@ PortfolioPerformance
   - Display error message: "Network error. Please check your connection."
   - Log error at ERROR level: `"Network error fetching portfolio performance: {error}"`
   - Show retry button
+
+### Reference (SPY) Error Handling
+- If only the reference API fails: show the chart with portfolio line only and a **non-blocking warning message** (e.g. MUI Alert severity="warning"): "Reference (SPY) comparison could not be loaded. Refresh the page to try again."
+- No retry button for the reference; the user retries by refreshing the page manually.
+- Log reference failure at WARN or ERROR level.
 
 ## Validations
 
@@ -212,23 +237,26 @@ PortfolioPerformance
 - Label: "Date" (optional)
 
 ### Y-Axis (Total Market Value)
-- Data key: `total_market_value` (from PortfolioHistoryPoint)
+- Data key: `total_market_value` (from PortfolioHistoryPoint); chart also uses `reference_value` for second line
 - Format: Currency format (e.g., "$1,234.56")
 - Type: Number
-- Label: "Portfolio Value" or "Market Value (USD)"
-- Domain: Auto-scaled based on data range
+- Label: "Portfolio Value (USD)" or "Market Value (USD)"
+- Domain: Auto-scaled based on data range (both series)
 
-### Line
-- Data key: `total_market_value`
-- Color: Use theme primary color or appropriate chart color
-- Stroke width: 2-3px
+### Lines
+- **Portfolio line**: dataKey `total_market_value`, name "Portfolio". Use theme primary color. Stroke width 2-3px.
+- **Reference (SPY) line**: dataKey `reference_value`, name "Reference (SPY)". Use a distinct color (e.g. secondary or gray). Stroke width 2-3px. Rendered when reference data is available; same date/granularity as portfolio.
 - Dot: Optional (can show dots on data points or hide for cleaner look)
+
+### Legend
+- Recharts Legend component so users can distinguish "Portfolio" and "Reference (SPY)" lines.
 
 ### Tooltip
 - Shows on hover
 - Displays:
   - Date: Formatted date string
-  - Total Market Value: Formatted currency (e.g., "$123,456.78")
+  - Portfolio value: Formatted currency when present
+  - Reference (SPY) value: Formatted currency when present
 - Custom formatting using recharts Tooltip component
 
 ### Responsive Container
@@ -239,9 +267,10 @@ PortfolioPerformance
 ## Error Handling
 
 ### Error States
-1. **Loading State**: Shows LoadingSpinner component, disables interactions
-2. **Error State**: Shows ErrorMessage component with error text and retry button
-3. **Empty State**: Shows message when history_points array is empty: "No performance data available for the selected date range"
+1. **Loading State**: Shows LoadingSpinner component (portfolio loading), disables interactions
+2. **Error State**: Shows ErrorMessage component with error text and retry button (portfolio errors only)
+3. **Reference Failure**: Non-blocking MUI Alert severity="warning" when reference API fails: "Reference (SPY) comparison could not be loaded. Refresh the page to try again." Chart still shows portfolio line; no retry button for reference.
+4. **Empty State**: Shows message when portfolio history_points array is empty: "No performance data available for the selected date range"
 
 ### Error Recovery
 - Retry button in ErrorMessage component
@@ -251,9 +280,9 @@ PortfolioPerformance
 ## Events
 
 ### Internal Events
-- `onGranularityChange(granularity: 'daily' | 'weekly' | 'monthly')`: Updates granularity state and triggers API call
-- `onDateRangeChange(dateRange: 'portfolio_start' | 'ytd' | '52w')`: Updates dateRange state, calculates startDate, and triggers API call
-- `onRetry()`: Retries API call with current state parameters (startDate, endDate, granularity)
+- `onGranularityChange(granularity: 'daily' | 'weekly' | 'monthly')`: Updates granularity state and triggers both API calls
+- `onDateRangeChange(dateRange: 'portfolio_start' | 'ytd' | '52w')`: Updates dateRange state, calculates startDate, and triggers both API calls
+- `onRetry()`: Retries portfolio API call only with current state parameters (startDate, endDate, granularity); does not refetch reference (user refreshes page to retry reference)
 
 ### External Events
 - Navigation event: Redirects to `/login` if authentication fails

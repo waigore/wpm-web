@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getAllPositions, getAssetTrades, getAssetTradesAll, getAssetLots, getAllAssetMetadata, getAssetPriceHistory } from './portfolioService';
+import { getAllPositions, getAssetTrades, getAssetTradesAll, getAssetLots, getAllAssetMetadata, getAssetPriceHistory, getReferencePerformance } from './portfolioService';
 import { DefaultService } from '../client/services/DefaultService';
 import { OpenAPI } from '../client/core/OpenAPI';
 import * as authService from './authService';
@@ -13,6 +13,7 @@ vi.mock('../client/services/DefaultService', () => ({
     getAssetLotsEndpointPortfolioLotsTickerGet: vi.fn(),
     getAllAssetMetadataEndpointAssetMetadataAllGet: vi.fn(),
     getAssetPriceHistoryEndpointAssetPricesTickerGet: vi.fn(),
+    getReferencePerformanceEndpointReferenceTickerPerformanceGet: vi.fn(),
   },
 }));
 
@@ -626,6 +627,76 @@ describe('portfolioService', () => {
         'AAPL',
         '2025-01-01',
         '2025-01-31'
+      );
+    });
+  });
+
+  describe('getReferencePerformance', () => {
+    it('should fetch reference performance with required and optional params', async () => {
+      const mockResponse = {
+        history_points: [
+          {
+            date: '2024-01-01',
+            total_market_value: 100000,
+            asset_positions: { SPY: 100000 },
+            prices: { SPY: 400 },
+            percentage_return: 0,
+          },
+        ],
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet).mockResolvedValue(
+        mockResponse as any
+      );
+
+      const result = await getReferencePerformance('SPY', {
+        asset_type: 'ETF',
+        start_date: '2024-01-01',
+        end_date: '2024-12-31',
+        granularity: 'weekly',
+      });
+
+      expect(result).toEqual(mockResponse);
+      expect(result.history_points).toHaveLength(1);
+      expect(DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet).toHaveBeenCalledWith(
+        'SPY',
+        'ETF',
+        '2024-01-01',
+        '2024-12-31',
+        'weekly'
+      );
+      expect(authService.getToken).toHaveBeenCalled();
+    });
+
+    it('should use default granularity when not provided', async () => {
+      const mockResponse = { history_points: [] };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet).mockResolvedValue(
+        mockResponse as any
+      );
+
+      await getReferencePerformance('SPY', { asset_type: 'ETF' });
+
+      expect(DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet).toHaveBeenCalledWith(
+        'SPY',
+        'ETF',
+        null,
+        null,
+        'daily'
+      );
+    });
+
+    it('should propagate errors', async () => {
+      const error = new Error('Reference performance failed');
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet).mockRejectedValue(
+        error
+      );
+
+      await expect(getReferencePerformance('SPY', { asset_type: 'ETF' })).rejects.toThrow(
+        'Reference performance failed'
       );
     });
   });

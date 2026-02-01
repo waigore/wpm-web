@@ -4,6 +4,7 @@ import portfolioData from './data/portfolio.json';
 import tradesData from './data/trades.json';
 import lotsData from './data/lots.json';
 import performanceData from './data/portfolio-performance.json';
+import referencePerformanceData from './data/reference-performance.json';
 import assetMetadataData from './data/asset-metadata.json';
 import assetPricesData from './data/asset-prices.json';
 import allocationData from './data/portfolio-allocation.json';
@@ -573,6 +574,71 @@ export const handlers = [
 
     // Sort by date (ascending)
     granularityFilteredData.sort((a, b) => {
+      const aDate = new Date(a.date).getTime();
+      const bDate = new Date(b.date).getTime();
+      return aDate - bDate;
+    });
+
+    return HttpResponse.json({
+      history_points: granularityFilteredData,
+    });
+  }),
+
+  // Reference performance endpoint - GET /reference/:ticker/performance
+  http.get('*/reference/:ticker/performance', async ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { detail: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    const url = new URL(request.url);
+    const assetType = url.searchParams.get('asset_type');
+    if (!assetType) {
+      return HttpResponse.json(
+        { detail: [{ loc: ['query', 'asset_type'], msg: 'Field required', type: 'value_error' }] },
+        { status: 422 }
+      );
+    }
+
+    const startDate = url.searchParams.get('start_date');
+    const endDate = url.searchParams.get('end_date');
+    const granularity = url.searchParams.get('granularity') || 'daily';
+
+    const validGranularities = ['daily', 'weekly', 'monthly'];
+    if (!validGranularities.includes(granularity)) {
+      return HttpResponse.json(
+        { detail: [{ loc: ['query', 'granularity'], msg: 'Invalid granularity', type: 'value_error' }] },
+        { status: 422 }
+      );
+    }
+
+    let filteredData = [...referencePerformanceData];
+    if (startDate || endDate) {
+      filteredData = referencePerformanceData.filter((point: { date: string }) => {
+        const pointDate = point.date;
+        if (startDate && pointDate < startDate) return false;
+        if (endDate && pointDate > endDate) return false;
+        return true;
+      });
+    }
+
+    let granularityFilteredData = filteredData;
+    if (granularity === 'weekly') {
+      granularityFilteredData = filteredData.filter((point: { date: string }) => {
+        const date = new Date(point.date);
+        return date.getDay() === 1;
+      });
+    } else if (granularity === 'monthly') {
+      granularityFilteredData = filteredData.filter((point: { date: string }) => {
+        const date = new Date(point.date);
+        return date.getDate() === 1;
+      });
+    }
+
+    granularityFilteredData.sort((a: { date: string }, b: { date: string }) => {
       const aDate = new Date(a.date).getTime();
       const bDate = new Date(b.date).getTime();
       return aDate - bDate;

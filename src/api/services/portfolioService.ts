@@ -46,6 +46,13 @@ export interface PortfolioPerformanceParams {
   granularity?: 'daily' | 'weekly' | 'monthly';
 }
 
+export interface ReferencePerformanceParams {
+  asset_type: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  granularity?: 'daily' | 'weekly' | 'monthly';
+}
+
 export interface AssetPriceHistoryParams {
   start_date?: string | null;
   end_date?: string | null;
@@ -208,6 +215,37 @@ export async function getPortfolioPerformance(
 
   try {
     return await DefaultService.getPortfolioPerformanceEndpointPortfolioAllPerformanceGet(
+      startDate,
+      endDate,
+      granularity
+    );
+  } catch (error: unknown) {
+    handle401Error(error);
+    throw error;
+  }
+}
+
+/**
+ * Get reference portfolio performance data (e.g. SPY) with same date range and granularity as portfolio
+ * @param ticker - Reference asset ticker (e.g. 'SPY')
+ * @param params - Required asset_type plus optional date range and granularity
+ * @returns PortfolioPerformanceResponse with history points
+ */
+export async function getReferencePerformance(
+  ticker: string,
+  params: ReferencePerformanceParams
+): Promise<PortfolioPerformanceResponse> {
+  getToken();
+
+  const assetType = params.asset_type;
+  const startDate = params?.start_date ?? null;
+  const endDate = params?.end_date ?? null;
+  const granularity = params?.granularity ?? 'daily';
+
+  try {
+    return await DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet(
+      ticker,
+      assetType,
       startDate,
       endDate,
       granularity

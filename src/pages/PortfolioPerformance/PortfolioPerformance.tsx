@@ -7,6 +7,7 @@ import {
   Paper,
   ToggleButton,
   ToggleButtonGroup,
+  Alert,
 } from '@mui/material';
 import {
   LineChart,
@@ -16,11 +17,13 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts';
 import { Breadcrumbs } from '../../components/Breadcrumbs/Breadcrumbs';
 import { ErrorMessage } from '../../components/ErrorMessage/ErrorMessage';
 import { useAuth } from '../../hooks/useAuth';
 import { usePortfolioPerformance } from '../../hooks/usePortfolioPerformance';
+import { useReferencePerformance } from '../../hooks/useReferencePerformance';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import logger from '../../utils/logger';
 
@@ -53,15 +56,29 @@ export const PortfolioPerformance: React.FC = () => {
     };
   }, [dateRange]);
 
+  const performanceParams = useMemo(
+    () => ({
+      start_date: startDate,
+      end_date: endDate,
+      granularity,
+    }),
+    [startDate, endDate, granularity]
+  );
+
   const {
     historyPoints,
     loading,
     error,
     refetch,
-  } = usePortfolioPerformance({
-    start_date: startDate,
-    end_date: endDate,
-    granularity,
+  } = usePortfolioPerformance(performanceParams);
+
+  const {
+    historyPoints: referenceHistoryPoints,
+    error: referenceError,
+  } = useReferencePerformance({
+    ticker: 'SPY',
+    asset_type: 'ETF',
+    ...performanceParams,
   });
 
   useEffect(() => {
@@ -107,15 +124,46 @@ export const PortfolioPerformance: React.FC = () => {
     await refetch();
   };
 
-  // Format data for recharts
+  // Merge portfolio and reference series by date for chart
   const chartData = useMemo(() => {
-    return historyPoints.map((point) => ({
-      date: point.date,
-      total_market_value: point.total_market_value,
-      formattedDate: formatDate(point.date),
-      formattedValue: formatCurrency(point.total_market_value),
-    }));
-  }, [historyPoints]);
+    const byDate = new Map<
+      string,
+      {
+        date: string;
+        total_market_value?: number;
+        reference_value?: number;
+        formattedDate: string;
+        formattedValue: string;
+        formattedReferenceValue?: string;
+      }
+    >();
+    for (const point of historyPoints) {
+      byDate.set(point.date, {
+        date: point.date,
+        total_market_value: point.total_market_value,
+        formattedDate: formatDate(point.date),
+        formattedValue: formatCurrency(point.total_market_value),
+      });
+    }
+    for (const point of referenceHistoryPoints) {
+      const existing = byDate.get(point.date);
+      const formattedReferenceValue = formatCurrency(point.total_market_value);
+      if (existing) {
+        existing.reference_value = point.total_market_value;
+        existing.formattedReferenceValue = formattedReferenceValue;
+      } else {
+        byDate.set(point.date, {
+          date: point.date,
+          reference_value: point.total_market_value,
+          formattedDate: formatDate(point.date),
+          formattedValue: '',
+          formattedReferenceValue,
+        });
+      }
+    }
+    const dates = Array.from(byDate.keys()).sort();
+    return dates.map((d) => byDate.get(d)!);
+  }, [historyPoints, referenceHistoryPoints]);
 
   // Identify dates that should show the year (first occurrence of each month)
   const datesWithYear = useMemo(() => {
@@ -139,15 +187,17 @@ export const PortfolioPerformance: React.FC = () => {
     return yearDates;
   }, [chartData]);
 
-  // Custom tooltip formatter
+  // Custom tooltip formatter (portfolio and optional reference value)
   interface TooltipProps {
     active?: boolean;
     payload?: Array<{
       payload: {
         date: string;
-        total_market_value: number;
+        total_market_value?: number;
+        reference_value?: number;
         formattedDate: string;
         formattedValue: string;
+        formattedReferenceValue?: string;
       };
     }>;
   }
@@ -163,6 +213,11 @@ export const PortfolioPerformance: React.FC = () => {
           <Typography variant="h6" component="div">
             {data.formattedValue}
           </Typography>
+          {data.formattedReferenceValue != null && (
+            <Typography variant="body2" color="text.secondary">
+              Reference (SPY): {data.formattedReferenceValue}
+            </Typography>
+          )}
         </Paper>
       );
     }
@@ -249,10 +304,19 @@ export const PortfolioPerformance: React.FC = () => {
         </Box>
       )}
 
-      {/* Error State */}
+      {/* Error State (portfolio only) */}
       {error && (
         <Box sx={{ mb: 2 }}>
           <ErrorMessage message={error} onRetry={handleRetry} />
+        </Box>
+      )}
+
+      {/* Reference failure: non-blocking warning */}
+      {referenceError && !loading && !error && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="warning" role="status">
+            Reference (SPY) comparison could not be loaded. Refresh the page to try again.
+          </Alert>
         </Box>
       )}
 
@@ -277,7 +341,7 @@ export const PortfolioPerformance: React.FC = () => {
                   tickFormatter={(value) => {
                     const date = new Date(value);
                     const dateString = value as string;
-                    
+
                     // Show year in YY format on first tick of each month
                     if (datesWithYear.has(dateString)) {
                       return date.toLocaleDateString('en-US', {
@@ -286,7 +350,7 @@ export const PortfolioPerformance: React.FC = () => {
                         year: '2-digit',
                       });
                     }
-                    
+
                     // Otherwise, show month and day only
                     return date.toLocaleDateString('en-US', {
                       month: 'short',
@@ -302,10 +366,21 @@ export const PortfolioPerformance: React.FC = () => {
                   label={{ value: 'Portfolio Value (USD)', angle: -90, position: 'insideLeft' }}
                 />
                 <Tooltip content={customTooltip} />
+                <Legend />
                 <Line
                   type="monotone"
                   dataKey="total_market_value"
+                  name="Portfolio"
                   stroke="#1976d2"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="reference_value"
+                  name="Reference (SPY)"
+                  stroke="#9e9e9e"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}

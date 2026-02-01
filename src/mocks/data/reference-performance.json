@@ -1,0 +1,302 @@
+[
+  {
+    "date": "2023-01-01",
+    "total_market_value": 98000,
+    "asset_positions": {
+      "SPY": 98000
+    },
+    "prices": {
+      "SPY": 390
+    }
+  },
+  {
+    "date": "2023-01-15",
+    "total_market_value": 102250,
+    "asset_positions": {
+      "SPY": 102250
+    },
+    "prices": {
+      "SPY": 392
+    }
+  },
+  {
+    "date": "2023-02-01",
+    "total_market_value": 104800,
+    "asset_positions": {
+      "SPY": 104800
+    },
+    "prices": {
+      "SPY": 394
+    }
+  },
+  {
+    "date": "2023-02-15",
+    "total_market_value": 108200,
+    "asset_positions": {
+      "SPY": 108200
+    },
+    "prices": {
+      "SPY": 396
+    }
+  },
+  {
+    "date": "2023-03-01",
+    "total_market_value": 110750,
+    "asset_positions": {
+      "SPY": 110750
+    },
+    "prices": {
+      "SPY": 398
+    }
+  },
+  {
+    "date": "2023-03-15",
+    "total_market_value": 113300,
+    "asset_positions": {
+      "SPY": 113300
+    },
+    "prices": {
+      "SPY": 400
+    }
+  },
+  {
+    "date": "2023-04-01",
+    "total_market_value": 115000,
+    "asset_positions": {
+      "SPY": 115000
+    },
+    "prices": {
+      "SPY": 402
+    }
+  },
+  {
+    "date": "2023-04-15",
+    "total_market_value": 116700,
+    "asset_positions": {
+      "SPY": 116700
+    },
+    "prices": {
+      "SPY": 404
+    }
+  },
+  {
+    "date": "2023-05-01",
+    "total_market_value": 119250,
+    "asset_positions": {
+      "SPY": 119250
+    },
+    "prices": {
+      "SPY": 406
+    }
+  },
+  {
+    "date": "2023-05-15",
+    "total_market_value": 121800,
+    "asset_positions": {
+      "SPY": 121800
+    },
+    "prices": {
+      "SPY": 408
+    }
+  },
+  {
+    "date": "2023-06-01",
+    "total_market_value": 123500,
+    "asset_positions": {
+      "SPY": 123500
+    },
+    "prices": {
+      "SPY": 410
+    }
+  },
+  {
+    "date": "2023-06-15",
+    "total_market_value": 125200,
+    "asset_positions": {
+      "SPY": 125200
+    },
+    "prices": {
+      "SPY": 412
+    }
+  },
+  {
+    "date": "2023-07-01",
+    "total_market_value": 127750,
+    "asset_positions": {
+      "SPY": 127750
+    },
+    "prices": {
+      "SPY": 414
+    }
+  },
+  {
+    "date": "2023-07-15",
+    "total_market_value": 130300,
+    "asset_positions": {
+      "SPY": 130300
+    },
+    "prices": {
+      "SPY": 416
+    }
+  },
+  {
+    "date": "2023-08-01",
+    "total_market_value": 132000,
+    "asset_positions": {
+      "SPY": 132000
+    },
+    "prices": {
+      "SPY": 418
+    }
+  },
+  {
+    "date": "2023-08-15",
+    "total_market_value": 133700,
+    "asset_positions": {
+      "SPY": 133700
+    },
+    "prices": {
+      "SPY": 420
+    }
+  },
+  {
+    "date": "2023-09-01",
+    "total_market_value": 136250,
+    "asset_positions": {
+      "SPY": 136250
+    },
+    "prices": {
+      "SPY": 422
+    }
+  },
+  {
+    "date": "2023-09-15",
+    "total_market_value": 138800,
+    "asset_positions": {
+      "SPY": 138800
+    },
+    "prices": {
+      "SPY": 424
+    }
+  },
+  {
+    "date": "2023-10-01",
+    "total_market_value": 140500,
+    "asset_positions": {
+      "SPY": 140500
+    },
+    "prices": {
+      "SPY": 426
+    }
+  },
+  {
+    "date": "2023-10-15",
+    "total_market_value": 142200,
+    "asset_positions": {
+      "SPY": 142200
+    },
+    "prices": {
+      "SPY": 428
+    }
+  },
+  {
+    "date": "2023-11-01",
+    "total_market_value": 144750,
+    "asset_positions": {
+      "SPY": 144750
+    },
+    "prices": {
+      "SPY": 430
+    }
+  },
+  {
+    "date": "2023-11-15",
+    "total_market_value": 147300,
+    "asset_positions": {
+      "SPY": 147300
+    },
+    "prices": {
+      "SPY": 432
+    }
+  },
+  {
+    "date": "2023-12-01",
+    "total_market_value": 149000,
+    "asset_positions": {
+      "SPY": 149000
+    },
+    "prices": {
+      "SPY": 434
+    }
+  },
+  {
+    "date": "2023-12-15",
+    "total_market_value": 150700,
+    "asset_positions": {
+      "SPY": 150700
+    },
+    "prices": {
+      "SPY": 436
+    }
+  },
+  {
+    "date": "2024-01-01",
+    "total_market_value": 153250,
+    "asset_positions": {
+      "SPY": 153250
+    },
+    "prices": {
+      "SPY": 438
+    }
+  },
+  {
+    "date": "2024-01-15",
+    "total_market_value": 155800,
+    "asset_positions": {
+      "SPY": 155800
+    },
+    "prices": {
+      "SPY": 440
+    }
+  },
+  {
+    "date": "2024-02-01",
+    "total_market_value": 157500,
+    "asset_positions": {
+      "SPY": 157500
+    },
+    "prices": {
+      "SPY": 442
+    }
+  },
+  {
+    "date": "2024-02-15",
+    "total_market_value": 159200,
+    "asset_positions": {
+      "SPY": 159200
+    },
+    "prices": {
+      "SPY": 444
+    }
+  },
+  {
+    "date": "2024-03-01",
+    "total_market_value": 161750,
+    "asset_positions": {
+      "SPY": 161750
+    },
+    "prices": {
+      "SPY": 446
+    }
+  },
+  {
+    "date": "2024-03-15",
+    "total_market_value": 164300,
+    "asset_positions": {
+      "SPY": 164300
+    },
+    "prices": {
+      "SPY": 448
+    }
+  }
+]

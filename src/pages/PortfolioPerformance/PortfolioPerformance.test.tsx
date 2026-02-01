@@ -17,6 +17,7 @@ vi.mock('../../api/services/authService', () => ({
 
 vi.mock('../../api/services/portfolioService', () => ({
   getPortfolioPerformance: vi.fn(),
+  getReferencePerformance: vi.fn(),
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -57,6 +58,12 @@ const mockHistoryPoints = [
   },
 ];
 
+const mockReferenceHistoryPoints = [
+  { date: '2024-01-01', total_market_value: 98000.0, asset_positions: { SPY: 98000.0 }, prices: { SPY: 390.0 }, percentage_return: 0 },
+  { date: '2024-01-15', total_market_value: 102000.0, asset_positions: { SPY: 102000.0 }, prices: { SPY: 392.0 }, percentage_return: 0 },
+  { date: '2024-02-01', total_market_value: 105000.0, asset_positions: { SPY: 105000.0 }, prices: { SPY: 394.0 }, percentage_return: 0 },
+];
+
 const renderPortfolioPerformance = () => {
   return render(
     <MemoryRouter initialEntries={['/portfolio/performance']}>
@@ -72,13 +79,16 @@ describe('PortfolioPerformance', () => {
     vi.clearAllMocks();
     vi.mocked(authService.getToken).mockReturnValue('mock-token');
     vi.mocked(authService.getUsername).mockReturnValue('testuser');
-  });
-
-  it('renders portfolio performance page', async () => {
+    // Default: both APIs succeed so chart renders
     vi.mocked(portfolioService.getPortfolioPerformance).mockResolvedValue({
       history_points: mockHistoryPoints,
     });
+    vi.mocked(portfolioService.getReferencePerformance).mockResolvedValue({
+      history_points: mockReferenceHistoryPoints,
+    });
+  });
 
+  it('renders portfolio performance page', async () => {
     renderPortfolioPerformance();
 
     await waitFor(() => {
@@ -92,6 +102,9 @@ describe('PortfolioPerformance', () => {
     vi.mocked(portfolioService.getPortfolioPerformance).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
+    vi.mocked(portfolioService.getReferencePerformance).mockResolvedValue({
+      history_points: mockReferenceHistoryPoints,
+    });
 
     renderPortfolioPerformance();
 
@@ -101,6 +114,9 @@ describe('PortfolioPerformance', () => {
   it('displays error state', async () => {
     const error = new Error('Failed to fetch');
     vi.mocked(portfolioService.getPortfolioPerformance).mockRejectedValue(error);
+    vi.mocked(portfolioService.getReferencePerformance).mockResolvedValue({
+      history_points: mockReferenceHistoryPoints,
+    });
 
     renderPortfolioPerformance();
 
@@ -111,6 +127,9 @@ describe('PortfolioPerformance', () => {
 
   it('displays empty state when no data', async () => {
     vi.mocked(portfolioService.getPortfolioPerformance).mockResolvedValue({
+      history_points: [],
+    });
+    vi.mocked(portfolioService.getReferencePerformance).mockResolvedValue({
       history_points: [],
     });
 
@@ -210,6 +229,9 @@ describe('PortfolioPerformance', () => {
       .mockResolvedValueOnce({
         history_points: mockHistoryPoints,
       });
+    vi.mocked(portfolioService.getReferencePerformance).mockResolvedValue({
+      history_points: mockReferenceHistoryPoints,
+    });
 
     renderPortfolioPerformance();
 
@@ -217,12 +239,17 @@ describe('PortfolioPerformance', () => {
       expect(screen.getByText(/Failed to fetch/i)).toBeInTheDocument();
     });
 
+    const initialPortfolioCalls = vi.mocked(portfolioService.getPortfolioPerformance).mock.calls.length;
+    const initialReferenceCalls = vi.mocked(portfolioService.getReferencePerformance).mock.calls.length;
+
     const retryButton = screen.getByRole('button', { name: /retry/i });
     await userEvent.click(retryButton);
 
     await waitFor(() => {
-      expect(portfolioService.getPortfolioPerformance).toHaveBeenCalledTimes(2);
+      expect(portfolioService.getPortfolioPerformance).toHaveBeenCalledTimes(initialPortfolioCalls + 1);
     });
+    // Retry only refetches portfolio, not reference
+    expect(portfolioService.getReferencePerformance).toHaveBeenCalledTimes(initialReferenceCalls);
   });
 
   it('calculates date range correctly for portfolio start (default)', async () => {
@@ -322,10 +349,6 @@ describe('PortfolioPerformance', () => {
   });
 
   it('renders breadcrumbs correctly', async () => {
-    vi.mocked(portfolioService.getPortfolioPerformance).mockResolvedValue({
-      history_points: mockHistoryPoints,
-    });
-
     renderPortfolioPerformance();
 
     await waitFor(() => {
@@ -335,5 +358,75 @@ describe('PortfolioPerformance', () => {
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Portfolio')).toBeInTheDocument();
     expect(screen.getByText('Performance')).toBeInTheDocument();
+  });
+
+  it('shows chart and fetches both portfolio and reference (SPY) performance in parallel', async () => {
+    renderPortfolioPerformance();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Portfolio Performance/i)).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(portfolioService.getPortfolioPerformance).toHaveBeenCalled();
+      expect(portfolioService.getReferencePerformance).toHaveBeenCalledWith(
+        'SPY',
+        expect.objectContaining({
+          asset_type: 'ETF',
+          granularity: 'weekly',
+        })
+      );
+    });
+
+    await waitFor(() => {
+      const chartContainer = document.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    }, { timeout: 3000 });
+  });
+
+  it('shows chart with portfolio line only when reference API fails', async () => {
+    vi.mocked(portfolioService.getReferencePerformance).mockRejectedValue(
+      new Error('Reference failed')
+    );
+
+    renderPortfolioPerformance();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Portfolio Performance/i)).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      const chartContainer = document.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    expect(
+      screen.getByText(/Reference \(SPY\) comparison could not be loaded. Refresh the page to try again./i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Portfolio')).toBeInTheDocument();
+  });
+
+  it('retry only calls getPortfolioPerformance not getReferencePerformance', async () => {
+    const error = new Error('Failed to fetch');
+    vi.mocked(portfolioService.getPortfolioPerformance)
+      .mockRejectedValueOnce(error)
+      .mockResolvedValueOnce({ history_points: mockHistoryPoints });
+
+    renderPortfolioPerformance();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to fetch/i)).toBeInTheDocument();
+    });
+
+    const referenceCallsBeforeRetry = vi.mocked(portfolioService.getReferencePerformance).mock.calls.length;
+
+    const retryButton = screen.getByRole('button', { name: /retry/i });
+    await userEvent.click(retryButton);
+
+    await waitFor(() => {
+      expect(portfolioService.getPortfolioPerformance).toHaveBeenCalledTimes(2);
+    });
+
+    expect(portfolioService.getReferencePerformance).toHaveBeenCalledTimes(referenceCallsBeforeRetry);
   });
 });
