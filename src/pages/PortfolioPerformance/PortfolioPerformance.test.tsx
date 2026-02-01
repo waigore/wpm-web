@@ -360,7 +360,7 @@ describe('PortfolioPerformance', () => {
     expect(screen.getByText('Performance')).toBeInTheDocument();
   });
 
-  it('shows chart and fetches both portfolio and reference (SPY) performance in parallel', async () => {
+  it('shows chart and fetches portfolio and both reference (SPY, BTC-USD) performance in parallel', async () => {
     renderPortfolioPerformance();
 
     await waitFor(() => {
@@ -376,6 +376,13 @@ describe('PortfolioPerformance', () => {
           granularity: 'weekly',
         })
       );
+      expect(portfolioService.getReferencePerformance).toHaveBeenCalledWith(
+        'BTC-USD',
+        expect.objectContaining({
+          asset_type: 'Crypto',
+          granularity: 'weekly',
+        })
+      );
     });
 
     await waitFor(() => {
@@ -384,9 +391,12 @@ describe('PortfolioPerformance', () => {
     }, { timeout: 3000 });
   });
 
-  it('shows chart with portfolio line only when reference API fails', async () => {
-    vi.mocked(portfolioService.getReferencePerformance).mockRejectedValue(
-      new Error('Reference failed')
+  it('shows chart with portfolio and BTC-USD when only SPY reference API fails', async () => {
+    vi.mocked(portfolioService.getReferencePerformance).mockImplementation(
+      (ticker: string) =>
+        ticker === 'SPY'
+          ? Promise.reject(new Error('Reference failed'))
+          : Promise.resolve({ history_points: mockReferenceHistoryPoints })
     );
 
     renderPortfolioPerformance();
@@ -402,6 +412,31 @@ describe('PortfolioPerformance', () => {
 
     expect(
       screen.getByText(/Reference \(SPY\) comparison could not be loaded. Refresh the page to try again./i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Portfolio')).toBeInTheDocument();
+  });
+
+  it('shows chart with portfolio and SPY when only BTC-USD reference API fails', async () => {
+    vi.mocked(portfolioService.getReferencePerformance).mockImplementation(
+      (ticker: string) =>
+        ticker === 'BTC-USD'
+          ? Promise.reject(new Error('Reference failed'))
+          : Promise.resolve({ history_points: mockReferenceHistoryPoints })
+    );
+
+    renderPortfolioPerformance();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Portfolio Performance/i)).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      const chartContainer = document.querySelector('.recharts-responsive-container');
+      expect(chartContainer).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    expect(
+      screen.getByText(/Reference \(BTC-USD\) comparison could not be loaded. Refresh the page to try again./i)
     ).toBeInTheDocument();
     expect(screen.getByText('Portfolio')).toBeInTheDocument();
   });

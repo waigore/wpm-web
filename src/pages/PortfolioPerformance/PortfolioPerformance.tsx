@@ -81,6 +81,15 @@ export const PortfolioPerformance: React.FC = () => {
     ...performanceParams,
   });
 
+  const {
+    historyPoints: referenceBtcHistoryPoints,
+    error: referenceBtcError,
+  } = useReferencePerformance({
+    ticker: 'BTC-USD',
+    asset_type: 'Crypto',
+    ...performanceParams,
+  });
+
   useEffect(() => {
     if (isAuthenticated) {
       logger.info('Portfolio performance page loaded', { context: 'PortfolioPerformance' });
@@ -132,9 +141,11 @@ export const PortfolioPerformance: React.FC = () => {
         date: string;
         total_market_value?: number;
         reference_value?: number;
+        reference_btc_value?: number;
         formattedDate: string;
         formattedValue: string;
         formattedReferenceValue?: string;
+        formattedReferenceBtcValue?: string;
       }
     >();
     for (const point of historyPoints) {
@@ -161,9 +172,25 @@ export const PortfolioPerformance: React.FC = () => {
         });
       }
     }
+    for (const point of referenceBtcHistoryPoints) {
+      const existing = byDate.get(point.date);
+      const formattedReferenceBtcValue = formatCurrency(point.total_market_value);
+      if (existing) {
+        existing.reference_btc_value = point.total_market_value;
+        existing.formattedReferenceBtcValue = formattedReferenceBtcValue;
+      } else {
+        byDate.set(point.date, {
+          date: point.date,
+          reference_btc_value: point.total_market_value,
+          formattedDate: formatDate(point.date),
+          formattedValue: '',
+          formattedReferenceBtcValue,
+        });
+      }
+    }
     const dates = Array.from(byDate.keys()).sort();
     return dates.map((d) => byDate.get(d)!);
-  }, [historyPoints, referenceHistoryPoints]);
+  }, [historyPoints, referenceHistoryPoints, referenceBtcHistoryPoints]);
 
   // Identify dates that should show the year (first occurrence of each month)
   const datesWithYear = useMemo(() => {
@@ -187,7 +214,7 @@ export const PortfolioPerformance: React.FC = () => {
     return yearDates;
   }, [chartData]);
 
-  // Custom tooltip formatter (portfolio and optional reference value)
+  // Custom tooltip formatter (portfolio and optional reference values)
   interface TooltipProps {
     active?: boolean;
     payload?: Array<{
@@ -195,9 +222,11 @@ export const PortfolioPerformance: React.FC = () => {
         date: string;
         total_market_value?: number;
         reference_value?: number;
+        reference_btc_value?: number;
         formattedDate: string;
         formattedValue: string;
         formattedReferenceValue?: string;
+        formattedReferenceBtcValue?: string;
       };
     }>;
   }
@@ -216,6 +245,11 @@ export const PortfolioPerformance: React.FC = () => {
           {data.formattedReferenceValue != null && (
             <Typography variant="body2" color="text.secondary">
               Reference (SPY): {data.formattedReferenceValue}
+            </Typography>
+          )}
+          {data.formattedReferenceBtcValue != null && (
+            <Typography variant="body2" color="text.secondary">
+              Reference (BTC-USD): {data.formattedReferenceBtcValue}
             </Typography>
           )}
         </Paper>
@@ -311,11 +345,20 @@ export const PortfolioPerformance: React.FC = () => {
         </Box>
       )}
 
-      {/* Reference failure: non-blocking warning */}
+      {/* Reference (SPY) failure: non-blocking warning */}
       {referenceError && !loading && !error && (
         <Box sx={{ mb: 2 }}>
           <Alert severity="warning" role="status">
             Reference (SPY) comparison could not be loaded. Refresh the page to try again.
+          </Alert>
+        </Box>
+      )}
+
+      {/* Reference (BTC-USD) failure: non-blocking warning */}
+      {referenceBtcError && !loading && !error && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity="warning" role="status">
+            Reference (BTC-USD) comparison could not be loaded. Refresh the page to try again.
           </Alert>
         </Box>
       )}
@@ -381,6 +424,15 @@ export const PortfolioPerformance: React.FC = () => {
                   dataKey="reference_value"
                   name="Reference (SPY)"
                   stroke="#9e9e9e"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="reference_btc_value"
+                  name="Reference (BTC-USD)"
+                  stroke="#ed7d31"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}

@@ -688,6 +688,43 @@ describe('portfolioService', () => {
       );
     });
 
+    it('should fetch BTC-USD reference performance with Crypto asset type', async () => {
+      const mockResponse = {
+        history_points: [
+          {
+            date: '2024-01-01',
+            total_market_value: 95000,
+            asset_positions: { 'BTC-USD': 95000 },
+            prices: { 'BTC-USD': 42000 },
+            percentage_return: 0,
+          },
+        ],
+      };
+
+      vi.mocked(authService.getToken).mockReturnValue('mock-token');
+      vi.mocked(DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet).mockResolvedValue(
+        mockResponse as any
+      );
+
+      const result = await getReferencePerformance('BTC-USD', {
+        asset_type: 'Crypto',
+        start_date: null,
+        end_date: null,
+        granularity: 'daily',
+      });
+
+      expect(result).toEqual(mockResponse);
+      expect(result.history_points).toHaveLength(1);
+      expect(DefaultService.getReferencePerformanceEndpointReferenceTickerPerformanceGet).toHaveBeenCalledWith(
+        'BTC-USD',
+        'Crypto',
+        null,
+        null,
+        'daily'
+      );
+      expect(authService.getToken).toHaveBeenCalled();
+    });
+
     it('should propagate errors', async () => {
       const error = new Error('Reference performance failed');
       vi.mocked(authService.getToken).mockReturnValue('mock-token');

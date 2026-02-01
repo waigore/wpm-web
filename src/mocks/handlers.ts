@@ -5,6 +5,7 @@ import tradesData from './data/trades.json';
 import lotsData from './data/lots.json';
 import performanceData from './data/portfolio-performance.json';
 import referencePerformanceData from './data/reference-performance.json';
+import referencePerformanceBtcData from './data/reference-performance-btc.json';
 import assetMetadataData from './data/asset-metadata.json';
 import assetPricesData from './data/asset-prices.json';
 import allocationData from './data/portfolio-allocation.json';
@@ -585,7 +586,7 @@ export const handlers = [
   }),
 
   // Reference performance endpoint - GET /reference/:ticker/performance
-  http.get('*/reference/:ticker/performance', async ({ request }) => {
+  http.get('*/reference/:ticker/performance', async ({ request, params }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return HttpResponse.json(
@@ -615,9 +616,11 @@ export const handlers = [
       );
     }
 
-    let filteredData = [...referencePerformanceData];
+    const ticker = params?.ticker ?? '';
+    const sourceData = ticker === 'BTC-USD' ? referencePerformanceBtcData : referencePerformanceData;
+    let filteredData = [...sourceData];
     if (startDate || endDate) {
-      filteredData = referencePerformanceData.filter((point: { date: string }) => {
+      filteredData = filteredData.filter((point: { date: string }) => {
         const pointDate = point.date;
         if (startDate && pointDate < startDate) return false;
         if (endDate && pointDate > endDate) return false;

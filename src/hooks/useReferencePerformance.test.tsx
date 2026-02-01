@@ -175,6 +175,48 @@ describe('useReferencePerformance', () => {
     expect(portfolioService.getReferencePerformance).toHaveBeenCalledTimes(callCount + 1);
   });
 
+  it('should fetch BTC-USD reference performance with Crypto asset type', async () => {
+    const mockResponse = {
+      history_points: [
+        {
+          date: '2024-01-01',
+          total_market_value: 95000.0,
+          asset_positions: { 'BTC-USD': 95000.0 },
+          prices: { 'BTC-USD': 42000.0 },
+          percentage_return: 0,
+        },
+      ],
+    };
+
+    vi.mocked(portfolioService.getReferencePerformance).mockResolvedValue(mockResponse);
+
+    const { result } = renderHook(
+      () =>
+        useReferencePerformance({
+          ticker: 'BTC-USD',
+          asset_type: 'Crypto',
+          start_date: null,
+          end_date: null,
+          granularity: 'weekly',
+        }),
+      { wrapper }
+    );
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.historyPoints).toEqual(mockResponse.history_points);
+    expect(result.current.error).toBeNull();
+    expect(portfolioService.getReferencePerformance).toHaveBeenCalledWith(
+      'BTC-USD',
+      expect.objectContaining({
+        asset_type: 'Crypto',
+        granularity: 'weekly',
+      })
+    );
+  });
+
   it('should not fetch when not authenticated', async () => {
     vi.mocked(authService.getToken).mockReturnValue(null);
     vi.mocked(authService.getUsername).mockReturnValue(null);
